@@ -1,83 +1,136 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FinancialApp.API.DTOs;
+using FinancialApp.API.Repositories;
+using FinancialApp.API.Services;
 
 namespace FinancialApp.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/accounts/{accountId}/[controller]")]
 [Authorize]
 public class TransactionsController : ControllerBase
 {
+    private readonly ITransactionRepository _transactionRepository;
+    private readonly IAccountRepository _accountRepository;
+    private readonly ITransactionValidationService _validationService;
+    private readonly IBalanceCalculationService _balanceCalculationService;
+    
+    public TransactionsController(
+        ITransactionRepository transactionRepository,
+        IAccountRepository accountRepository,
+        ITransactionValidationService validationService,
+        IBalanceCalculationService balanceCalculationService)
+    {
+        _transactionRepository = transactionRepository;
+        _accountRepository = accountRepository;
+        _validationService = validationService;
+        _balanceCalculationService = balanceCalculationService;
+    }
+    
     /// <summary>
     /// Get all transactions for the authenticated account.
     /// Returns transactions sorted by date descending.
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactions()
+    public async Task<ActionResult<TransactionListResponse>> GetTransactions(string accountId)
     {
-        // Mock data - return sample transactions
-        var mockTransactions = new[]
+        // Verify account exists
+        var account = await _accountRepository.GetByIdAsync(accountId);
+        if (account == null)
         {
-            new TransactionDto(
-                Id: "550e8400-e29b-41d4-a716-446655440101",
-                SourceAccountId: "550e8400-e29b-41d4-a716-446655440001",
-                TargetAccountId: "550e8400-e29b-41d4-a716-446655440002",
-                Amount: 50.00m,
-                Date: "2026-06-09",
-                CreatedAt: "2026-06-09T10:30:00Z"
-            ),
-            new TransactionDto(
-                Id: "550e8400-e29b-41d4-a716-446655440102",
-                SourceAccountId: "550e8400-e29b-41d4-a716-446655440002",
-                TargetAccountId: "550e8400-e29b-41d4-a716-446655440001",
-                Amount: 75.50m,
-                Date: "2026-06-08",
-                CreatedAt: "2026-06-08T14:15:00Z"
-            ),
-            new TransactionDto(
-                Id: "550e8400-e29b-41d4-a716-446655440103",
-                SourceAccountId: "550e8400-e29b-41d4-a716-446655440001",
-                TargetAccountId: "550e8400-e29b-41d4-a716-446655440003",
-                Amount: 100.00m,
-                Date: "2026-06-07",
-                CreatedAt: "2026-06-07T09:45:00Z"
-            ),
-            new TransactionDto(
-                Id: "550e8400-e29b-41d4-a716-446655440104",
-                SourceAccountId: "550e8400-e29b-41d4-a716-446655440003",
-                TargetAccountId: "550e8400-e29b-41d4-a716-446655440002",
-                Amount: 125.75m,
-                Date: "2026-06-06",
-                CreatedAt: "2026-06-06T11:20:00Z"
-            )
-        };
+            return NotFound(new { error = "Account not found" });
+        }
         
-        return Ok(mockTransactions);
+        // Get transactions
+        var transactions = await _transactionRepository.GetByAccountIdAsync(accountId);
+        var transactionDtos = transactions.Select(t => new TransactionDto(
+            Id: t.Id,
+            SourceAccountId: t.SourceAccountId,
+            TargetAccountId: t.TargetAccountId,
+            Amount: t.Amount,
+            Date: t.TransactionDate.ToString("yyyy-MM-dd"),
+            CreatedAt: t.CreatedAt.ToString("O")
+        )).ToList();
+        
+        // Calculate balance
+        var balance = await _balanceCalculationService.CalculateBalanceAsync(accountId);
+        
+        var response = new TransactionListResponse(
+            Transactions: transactionDtos,
+            Balance: balance
+        );
+        
+        return Ok(response);
     }
     
     /// <summary>
     /// Create a new transaction from the authenticated account.
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<TransactionDto>> CreateTransaction([FromBody] CreateTransactionRequest request)
+    public async Task<ActionResult<TransactionDto>> CreateTransaction(
+        string accountId,
+        [FromBody] CreateTransactionRequest request)
     {
         // Validate input
-        if (request.Amount <= 0)
+        if (request == null)
         {
-            return BadRequest(new { message = "Amount must be positive" });
+            return BadRequest(new { error = "Request body is required" });
         }
         
-        // Mock transaction creation
-        var newTransaction = new TransactionDto(
-            Id: Guid.NewGuid().ToString(),
-            SourceAccountId: "550e8400-e29b-41d4-a716-446655440001", // Mock authenticated account
-            TargetAccountId: request.TargetAccountId,
-            Amount: request.Amount,
-            Date: request.Date,
-            CreatedAt: DateTime.UtcNow.ToString("O")
+        if (string.IsNullOrEmpty(request.TargetAccountId))
+        {
+            return BadRequest(new { error = "Target account is required" });
+        }
+        
+        // Parse transaction date
+        if (!DateTime.TryParse(request.Date, out var transactionDate))
+        {
+            return BadRequest(new { error = "Invalid date format" });
+        }
+        
+        // Validate transaction
+        var validationResult = await _validationService.ValidateTransactionAsync(
+            accountId,
+            request.TargetAccountId,
+            request.Amount,
+            transactionDate);
+        
+        if (!validationResult.IsValid)
+        {
+            if (validationResult.ErrorMessage.Contains("Insufficient"))
+            {
+                return StatusCode(422, new { error = validationResult.ErrorMessage });
+            }
+            return BadRequest(new { error = validationResult.ErrorMessage });
+        }
+        
+        // Create transaction
+        var transaction = new Transaction
+        {
+            Id = Guid.NewGuid().ToString(),
+            SourceAccountId = accountId,
+            TargetAccountId = request.TargetAccountId,
+            Amount = request.Amount,
+            TransactionDate = transactionDate,
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        var createdTransaction = await _transactionRepository.CreateAsync(transaction);
+        
+        var response = new TransactionDto(
+            Id: createdTransaction.Id,
+            SourceAccountId: createdTransaction.SourceAccountId,
+            TargetAccountId: createdTransaction.TargetAccountId,
+            Amount: createdTransaction.Amount,
+            Date: createdTransaction.TransactionDate.ToString("yyyy-MM-dd"),
+            CreatedAt: createdTransaction.CreatedAt.ToString("O")
         );
         
-        return CreatedAtAction(nameof(GetTransactions), newTransaction);
+        return CreatedAtAction(nameof(GetTransactions), new { accountId }, response);
     }
 }

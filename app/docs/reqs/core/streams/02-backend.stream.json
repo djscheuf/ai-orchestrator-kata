@@ -10,44 +10,44 @@
     {
       "criterion": "Display existing transactions for logged-in account",
       "gherkin": "Given a user is logged in When they view the transaction list Then they see all transactions impacting their account sorted by date descending",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "criterion": "Add new transactions to existing accounts",
       "gherkin": "Given a user is logged in When they submit a new transaction with valid date, payee, and amount Then the transaction is recorded and balance is updated immediately",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "criterion": "Show only transactions that impact the current user's account",
       "gherkin": "Given multiple accounts exist in the system When a user logs in Then they see only transactions where their account is involved",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "criterion": "Maintain accurate running balance",
       "gherkin": "Given transactions are displayed When a user views the balance Then it reflects the sum of all transactions for their account",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "criterion": "Cannot create transactions for more money than available",
       "gherkin": "Given an account has a balance of $100 When a user attempts to add a transaction of -$150 Then the transaction is rejected with error 'Insufficient funds'",
-      "status": "pending"
+      "status": "implemented"
     }
   ],
   "related_edge_cases": [
     {
       "criterion": "Zero amount transaction",
       "gherkin": "Given a user is adding a transaction When they enter amount as 0 Then the transaction is rejected with error 'Amount must be non-zero'",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "criterion": "Account with exactly zero balance",
       "gherkin": "Given an account has zero balance When a user attempts to add a negative transaction Then the transaction is rejected with error 'Insufficient funds'",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "criterion": "Invalid account credentials",
       "gherkin": "Given a user enters incorrect password When they attempt to login Then error message 'Invalid credentials' is displayed",
-      "status": "pending"
+      "status": "implemented"
     }
   ],
   "dependencies": [
@@ -57,52 +57,83 @@
     {
       "description": "Implement JWT token generation, validation, and bearer token middleware",
       "layer": "api",
-      "status": "pending",
-      "depends_on": []
+      "status": "completed",
+      "depends_on": [],
+      "implementation": "Services/JwtTokenService.cs, Middleware/JwtMiddleware.cs, Tests/JwtTokenServiceTests.cs, Tests/JwtMiddlewareTests.cs"
     },
     {
       "description": "Implement POST /api/auth/login endpoint with credential validation and token generation",
       "layer": "api",
-      "status": "pending",
-      "depends_on": ["Implement JWT token generation, validation, and bearer token middleware"]
+      "status": "completed",
+      "depends_on": ["Implement JWT token generation, validation, and bearer token middleware"],
+      "implementation": "Controllers/AuthController.cs, Services/AccountSecurityService.cs, Tests/AuthControllerTests.cs"
     },
     {
       "description": "Implement repository pattern for transaction data access",
       "layer": "api",
-      "status": "pending",
-      "depends_on": []
+      "status": "completed",
+      "depends_on": [],
+      "implementation": "Repositories/ITransactionRepository.cs, Repositories/IAccountRepository.cs, Repositories/IAccountSecurityRepository.cs, Repositories/InMemoryTransactionRepository.cs, Repositories/InMemoryAccountRepository.cs, Tests/RepositoryInterfaceTests.cs"
     },
     {
       "description": "Implement business logic validation for transaction creation",
       "layer": "api",
-      "status": "pending",
-      "depends_on": ["Implement repository pattern for transaction data access"]
+      "status": "completed",
+      "depends_on": ["Implement repository pattern for transaction data access"],
+      "implementation": "Services/TransactionValidationService.cs, Tests/TransactionValidationServiceTests.cs"
     },
     {
       "description": "Implement GET and POST endpoints for transaction retrieval and creation",
       "layer": "api",
-      "status": "pending",
-      "depends_on": ["Implement JWT token generation, validation, and bearer token middleware", "Implement business logic validation for transaction creation"]
+      "status": "completed",
+      "depends_on": ["Implement JWT token generation, validation, and bearer token middleware", "Implement business logic validation for transaction creation"],
+      "implementation": "Controllers/TransactionsController.cs, DTOs/TransactionListResponse.cs, Services/BalanceCalculationService.cs"
     },
     {
       "description": "Implement comprehensive unit tests for authentication and transaction logic",
       "layer": "api",
-      "status": "pending",
-      "depends_on": ["Implement GET and POST endpoints for transaction retrieval and creation"]
+      "status": "completed",
+      "depends_on": ["Implement GET and POST endpoints for transaction retrieval and creation"],
+      "implementation": "Tests/JwtTokenServiceTests.cs, Tests/AuthControllerTests.cs, Tests/TransactionValidationServiceTests.cs, Tests/BalanceCalculationServiceTests.cs"
     },
     {
       "description": "Implement integration tests for endpoint behavior and database interactions",
       "layer": "api",
-      "status": "pending",
-      "depends_on": ["Implement comprehensive unit tests for authentication and transaction logic"]
+      "status": "completed",
+      "depends_on": ["Implement comprehensive unit tests for authentication and transaction logic"],
+      "implementation": "Tests/TransactionEndpointIntegrationTests.cs"
     }
   ],
   "relevant_context": {
     "documentation": [
       "app/docs/ARCHITECTURE_BACKEND.md",
       "app/docs/reqs/core/display-and-manage-transactions.design.json",
-      "app/docs/reqs/core/display-and-manage-transactions.analysis.json"
+      "app/docs/reqs/core/display-and-manage-transactions.analysis.json",
+      "app/docs/reqs/core/backend-stream-test-plan.md",
+      "app/docs/reqs/core/backend-stream-implementation-summary.md",
+      "app/docs/reqs/core/BACKEND_STREAM_COMPLETION.md"
     ],
-    "code": []
+    "code": [
+      "app/src/api/Services/JwtTokenService.cs",
+      "app/src/api/Services/AccountSecurityService.cs",
+      "app/src/api/Services/TransactionValidationService.cs",
+      "app/src/api/Services/BalanceCalculationService.cs",
+      "app/src/api/Middleware/JwtMiddleware.cs",
+      "app/src/api/Repositories/ITransactionRepository.cs",
+      "app/src/api/Repositories/IAccountRepository.cs",
+      "app/src/api/Repositories/IAccountSecurityRepository.cs",
+      "app/src/api/Repositories/InMemoryTransactionRepository.cs",
+      "app/src/api/Repositories/InMemoryAccountRepository.cs",
+      "app/src/api/Controllers/AuthController.cs",
+      "app/src/api/Controllers/TransactionsController.cs",
+      "app/src/api/DTOs/TransactionListResponse.cs",
+      "app/src/api/Tests/JwtTokenServiceTests.cs",
+      "app/src/api/Tests/JwtMiddlewareTests.cs",
+      "app/src/api/Tests/AuthControllerTests.cs",
+      "app/src/api/Tests/RepositoryInterfaceTests.cs",
+      "app/src/api/Tests/TransactionValidationServiceTests.cs",
+      "app/src/api/Tests/BalanceCalculationServiceTests.cs",
+      "app/src/api/Tests/TransactionEndpointIntegrationTests.cs"
+    ]
   }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using FinancialApp.API.DTOs;
+using FinancialApp.API.Services;
 
 namespace FinancialApp.API.Controllers;
 
@@ -7,6 +8,15 @@ namespace FinancialApp.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
+    private readonly IJwtTokenService _jwtTokenService;
+    private readonly IAccountSecurityService _accountSecurityService;
+    
+    public AuthController(IJwtTokenService jwtTokenService, IAccountSecurityService accountSecurityService)
+    {
+        _jwtTokenService = jwtTokenService;
+        _accountSecurityService = accountSecurityService;
+    }
+    
     /// <summary>
     /// Authenticate user with username and password.
     /// Returns JWT token and account information.
@@ -14,33 +24,33 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
-        // Mock authentication - accept any valid username from seed data
-        var validUsernames = new[] { "user_a", "user_b", "user_c", "user_d", "user_e" };
-        
-        if (!validUsernames.Contains(request.Username))
+        // Validate request
+        if (string.IsNullOrWhiteSpace(request?.Username) || string.IsNullOrWhiteSpace(request?.Password))
         {
-            return Unauthorized(new { message = "Invalid credentials" });
+            return BadRequest(new { error = "Username and password are required" });
         }
         
-        // Mock token generation
-        var mockToken = $"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{request.Username}.mock_signature";
-        
-        // Map username to account
-        var accountMap = new Dictionary<string, (string Id, string Name)>
+        // Validate credentials
+        var accountId = await _accountSecurityService.ValidateCredentialsAsync(request.Username, request.Password);
+        if (accountId == null)
         {
-            { "user_a", ("550e8400-e29b-41d4-a716-446655440001", "Alice Account") },
-            { "user_b", ("550e8400-e29b-41d4-a716-446655440002", "Bob Account") },
-            { "user_c", ("550e8400-e29b-41d4-a716-446655440003", "Charlie Account") },
-            { "user_d", ("550e8400-e29b-41d4-a716-446655440004", "Diana Account") },
-            { "user_e", ("550e8400-e29b-41d4-a716-446655440005", "Eve Account") }
-        };
+            return Unauthorized(new { error = "Invalid credentials" });
+        }
         
-        var (accountId, accountName) = accountMap[request.Username];
+        // Get account information
+        var accountInfo = await _accountSecurityService.GetAccountInfoAsync(accountId);
+        if (accountInfo == null)
+        {
+            return Unauthorized(new { error = "Invalid credentials" });
+        }
+        
+        // Generate token
+        var token = _jwtTokenService.GenerateToken(accountId);
         
         var response = new LoginResponse(
-            Token: mockToken,
+            Token: token,
             AccountId: accountId,
-            AccountName: accountName
+            AccountName: accountInfo.AccountName
         );
         
         return Ok(response);
