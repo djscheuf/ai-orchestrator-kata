@@ -1,0 +1,249 @@
+{
+  "info": {
+    "title": "Financial Application API",
+    "version": "1.0.0",
+    "description": "API contracts for the financial application"
+  },
+  "endpoints": [
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "description": "Authenticate user and return access token",
+      "requiresAuth": false,
+      "request": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "User's login username"
+          },
+          "password": {
+            "type": "string",
+            "description": "User's password"
+          }
+        },
+        "required": ["username", "password"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT bearer token for authentication"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the user's account"
+          },
+          "accountName": {
+            "type": "string",
+            "description": "Display name of the account"
+          }
+        },
+        "required": ["token", "accountId", "accountName"]
+      },
+      "errors": [
+        {
+          "status": 400,
+          "description": "Bad Request - Invalid input"
+        },
+        {
+          "status": 401,
+          "description": "Unauthorized - Invalid credentials"
+        }
+      ]
+    },
+    {
+      "path": "/api/transactions",
+      "method": "GET",
+      "description": "Get all transactions for the authenticated account",
+      "requiresAuth": true,
+      "request": {
+        "type": "object",
+        "properties": {},
+        "headers": {
+          "Authorization": {
+            "type": "string",
+            "description": "Bearer token",
+            "required": true
+          }
+        }
+      },
+      "response": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Unique transaction identifier"
+            },
+            "sourceAccountId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Account sending money"
+            },
+            "targetAccountId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Account receiving money"
+            },
+            "amount": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Transaction amount (always positive)"
+            },
+            "date": {
+              "type": "string",
+              "format": "date",
+              "description": "Transaction date"
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Timestamp when transaction was created"
+            }
+          },
+          "required": ["id", "sourceAccountId", "targetAccountId", "amount", "date"]
+        },
+        "description": "Array of transactions sorted by date descending"
+      },
+      "errors": [
+        {
+          "status": 401,
+          "description": "Unauthorized - Invalid or missing token"
+        }
+      ]
+    },
+    {
+      "path": "/api/transactions",
+      "method": "POST",
+      "description": "Create a new transaction from the authenticated account",
+      "requiresAuth": true,
+      "request": {
+        "type": "object",
+        "properties": {
+          "targetAccountId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account to receive the money"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "minimum": 0.01,
+            "description": "Amount to transfer (must be positive)"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Transaction date (today or past only)"
+          }
+        },
+        "required": ["targetAccountId", "amount", "date"],
+        "headers": {
+          "Authorization": {
+            "type": "string",
+            "description": "Bearer token",
+            "required": true
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique transaction identifier"
+          },
+          "sourceAccountId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account sending money (from authenticated user)"
+          },
+          "targetAccountId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account receiving money"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Transaction amount"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Transaction date"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when transaction was created"
+          }
+        },
+        "required": ["id", "sourceAccountId", "targetAccountId", "amount", "date"]
+      },
+      "errors": [
+        {
+          "status": 400,
+          "description": "Bad Request - Invalid input or insufficient funds"
+        },
+        {
+          "status": 401,
+          "description": "Unauthorized - Invalid or missing token"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Cannot create transaction for this account"
+        }
+      ]
+    },
+    {
+      "path": "/api/accounts/balance",
+      "method": "GET",
+      "description": "Get current balance for the authenticated account",
+      "requiresAuth": true,
+      "request": {
+        "type": "object",
+        "properties": {},
+        "headers": {
+          "Authorization": {
+            "type": "string",
+            "description": "Bearer token",
+            "required": true
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique account identifier"
+          },
+          "accountName": {
+            "type": "string",
+            "description": "Display name of the account"
+          },
+          "balance": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Current account balance (can be negative)"
+          }
+        },
+        "required": ["accountId", "accountName", "balance"]
+      },
+      "errors": [
+        {
+          "status": 401,
+          "description": "Unauthorized - Invalid or missing token"
+        }
+      ]
+    }
+  ]
+}
