@@ -1,0 +1,355 @@
+{
+  "source_story": "app/docs/reqs/core/display-and-manage-transactions.analysis.json",
+  "overall_design": "app/docs/reqs/core/display-and-manage-transactions.design.json",
+  "story": {
+    "so_that": "I can track my financial activity and maintain an accurate account balance",
+    "as_a": "Bank account holder",
+    "i_want": "view my transactions, add new transactions, and see my current balance in a secure banking application"
+  },
+  "acceptance_criteria": [
+    {
+      "criterion": "Display existing transactions for logged-in account",
+      "gherkin": "Given a user is logged in When they view the transaction list Then they see all transactions impacting their account sorted by date descending",
+      "status": "pending"
+    },
+    {
+      "criterion": "Add new transactions to existing accounts",
+      "gherkin": "Given a user is logged in When they submit a new transaction with valid date, payee, and amount Then the transaction is recorded and balance is updated immediately",
+      "status": "pending"
+    },
+    {
+      "criterion": "Show only transactions that impact the current user's account",
+      "gherkin": "Given multiple accounts exist in the system When a user logs in Then they see only transactions where their account is involved",
+      "status": "pending"
+    },
+    {
+      "criterion": "Maintain accurate running balance",
+      "gherkin": "Given transactions are displayed When a user views the balance Then it reflects the sum of all transactions for their account",
+      "status": "pending"
+    },
+    {
+      "criterion": "Cannot create transactions for more money than available",
+      "gherkin": "Given an account has a balance of $100 When a user attempts to add a transaction of -$150 Then the transaction is rejected with error 'Insufficient funds'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Can only set transactions for today or past dates",
+      "gherkin": "Given a user is adding a transaction When they attempt to set a date in the future Then the transaction is rejected with error 'Future dates not allowed'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Transactions cannot be deleted",
+      "gherkin": "Given a transaction exists in the list When a user views the transaction Then no delete button or option is available",
+      "status": "pending"
+    },
+    {
+      "criterion": "System handles up to 50-100 transactions displayed at once",
+      "gherkin": "Given an account has 100 transactions When the user views the transaction list Then all 100 are displayed without pagination and load time is under 2 seconds",
+      "status": "pending"
+    },
+    {
+      "criterion": "Mock authentication with 3-5 different accounts",
+      "gherkin": "Given 5 accounts exist (A-E) When a user logs in with Account B credentials Then they access Account B and see only Account B transactions",
+      "status": "pending"
+    },
+    {
+      "criterion": "User session persists across page refreshes",
+      "gherkin": "Given a user is logged in When they refresh the page Then they remain logged in and see their transactions",
+      "status": "pending"
+    },
+    {
+      "criterion": "User can log out",
+      "gherkin": "Given a user is logged in When they click logout Then their session ends and they return to login screen",
+      "status": "pending"
+    }
+  ],
+  "edge_cases": [
+    {
+      "criterion": "Empty payee field",
+      "gherkin": "Given a user is adding a transaction When they leave payee field empty Then the transaction is rejected with error 'Payee is required'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Zero amount transaction",
+      "gherkin": "Given a user is adding a transaction When they enter amount as 0 Then the transaction is rejected with error 'Amount must be non-zero'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Very large transaction amount",
+      "gherkin": "Given a user is adding a transaction When they enter amount exceeding $1,000,000 Then the transaction is rejected with error 'Amount exceeds maximum'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account with no transactions",
+      "gherkin": "Given a new account with zero transactions When a user logs in Then they see empty transaction list with message 'No transactions yet'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account with exactly zero balance",
+      "gherkin": "Given an account has zero balance When a user attempts to add a negative transaction Then the transaction is rejected with error 'Insufficient funds'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Multiple users accessing same account simultaneously",
+      "gherkin": "Given two users are logged into the same account When one adds a transaction Then the other sees the updated balance after refresh",
+      "status": "pending"
+    },
+    {
+      "criterion": "Invalid date format",
+      "gherkin": "Given a user is adding a transaction When they enter an invalid date format Then the transaction is rejected with error 'Invalid date format'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Session expires while viewing transactions",
+      "gherkin": "Given a user session has expired When they attempt to add a transaction Then they are redirected to login with message 'Session expired'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Invalid account credentials",
+      "gherkin": "Given a user enters incorrect password When they attempt to login Then error message 'Invalid credentials' is displayed",
+      "status": "pending"
+    }
+  ],
+  "impacted_layers": {
+    "database": [
+      "Accounts table",
+      "AccountSecurity table",
+      "Transactions table"
+    ],
+    "api": [
+      "POST /api/auth/login",
+      "GET /api/accounts/{accountId}/transactions",
+      "POST /api/accounts/{accountId}/transactions",
+      "JWT authentication middleware"
+    ],
+    "ui": [
+      "Login form component",
+      "AuthContext",
+      "Transaction list component",
+      "Balance display component",
+      "Add transaction form",
+      "Dashboard layout"
+    ]
+  },
+  "steps": [
+    {
+      "description": "Create database tables for Accounts, AccountSecurity, and Transactions with proper constraints, indexes, and relationships",
+      "layer": "database",
+      "status": "pending"
+    },
+    {
+      "description": "Implement JWT token generation, validation, and bearer token middleware",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement POST /api/auth/login endpoint with credential validation and token generation",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement repository pattern for transaction data access",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement business logic validation for transaction creation",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement GET and POST endpoints for transaction retrieval and creation",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement AuthContext for state management and login form component",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement TransactionContext for transaction list and balance state",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement transaction list view with TanStack Table for sortable columns",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement prominent balance display component",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement form for creating new transactions with date picker, amount input, and target account selector",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement main dashboard layout with routing between login and transaction views",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Create seed data with 3-5 test accounts and sample transactions",
+      "layer": "database",
+      "status": "pending"
+    },
+    {
+      "description": "Implement comprehensive unit tests for authentication and transaction logic",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement integration tests for endpoint behavior and database interactions",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement unit tests for components and state management",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement integration tests for component interactions and API calls",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement end-to-end tests for complete user workflows",
+      "layer": "testing",
+      "status": "pending"
+    }
+  ],
+  "testing_strategy": {
+    "unit_tests": [
+      {
+        "description": "JWT token generation and validation",
+        "layer": "api"
+      },
+      {
+        "description": "Transaction validation business rules (sufficient funds, valid date, non-zero amount)",
+        "layer": "api"
+      },
+      {
+        "description": "Balance calculation logic",
+        "layer": "api"
+      },
+      {
+        "description": "AuthContext state management",
+        "layer": "ui"
+      },
+      {
+        "description": "TransactionContext state management",
+        "layer": "ui"
+      },
+      {
+        "description": "Form validation logic",
+        "layer": "ui"
+      },
+      {
+        "description": "Currency and date formatting",
+        "layer": "ui"
+      }
+    ],
+    "integration_tests": [
+      {
+        "description": "Authentication endpoint with database",
+        "layer": "api"
+      },
+      {
+        "description": "Transaction endpoints with repository and validation service",
+        "layer": "api"
+      },
+      {
+        "description": "Account isolation enforcement",
+        "layer": "api"
+      },
+      {
+        "description": "API calls with authentication headers",
+        "layer": "ui"
+      },
+      {
+        "description": "Error handling for API failures",
+        "layer": "ui"
+      },
+      {
+        "description": "State synchronization between contexts",
+        "layer": "ui"
+      }
+    ],
+    "e2e_tests": [
+      {
+        "description": "Complete login flow with valid/invalid credentials",
+        "layer": "testing"
+      },
+      {
+        "description": "View transaction list after login",
+        "layer": "testing"
+      },
+      {
+        "description": "Add new transaction and see balance update",
+        "layer": "testing"
+      },
+      {
+        "description": "Attempt transaction with insufficient funds",
+        "layer": "testing"
+      },
+      {
+        "description": "Attempt transaction with future date",
+        "layer": "testing"
+      },
+      {
+        "description": "Session persistence across page refresh",
+        "layer": "testing"
+      },
+      {
+        "description": "Logout and return to login screen",
+        "layer": "testing"
+      },
+      {
+        "description": "Account isolation (user sees only their transactions)",
+        "layer": "testing"
+      }
+    ]
+  },
+  "risks_and_mitigations": [
+    {
+      "risk": "Balance calculation errors could cause data integrity issues",
+      "mitigation": "Implement comprehensive unit tests for balance calculation logic, use database-level aggregation queries, add integration tests with multiple transactions",
+      "layer": "api"
+    },
+    {
+      "risk": "Concurrent transaction creation could lead to race conditions",
+      "mitigation": "Use database transaction isolation levels (SERIALIZABLE or REPEATABLE READ), implement optimistic locking if needed, test concurrent scenarios",
+      "layer": "database"
+    },
+    {
+      "risk": "Performance degradation with large transaction volumes (5,000-10,000)",
+      "mitigation": "Ensure proper database indexing on account_id and transaction_date, implement query optimization, monitor query performance, consider pagination as future enhancement",
+      "layer": "database"
+    },
+    {
+      "risk": "Session management complexity and security vulnerabilities",
+      "mitigation": "Use established JWT libraries, implement token expiration (30 minutes), validate token on every protected endpoint, store token securely in localStorage",
+      "layer": "api"
+    },
+    {
+      "risk": "Frontend state synchronization issues between AuthContext and TransactionContext",
+      "mitigation": "Implement clear state management patterns, use React hooks properly, add integration tests for context interactions",
+      "layer": "ui"
+    },
+    {
+      "risk": "Database connection failures during transaction creation",
+      "mitigation": "Implement proper error handling and user-friendly error messages, add retry logic for transient failures, log errors for monitoring",
+      "layer": "database"
+    },
+    {
+      "risk": "Cross-account data access if authorization checks are missed",
+      "mitigation": "Implement authorization checks on every endpoint, validate accountId from token matches request parameter, add security-focused integration tests",
+      "layer": "api"
+    }
+  ]
+}

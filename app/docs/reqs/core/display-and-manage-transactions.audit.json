@@ -1,0 +1,85 @@
+{
+  "run_date": "20260610T194100Z",
+  "target_story": "app/docs/reqs/core/display-and-manage-transactions.analysis.json",
+  "project_structure": {
+    "root": "/mnt/data/0_repo/ai-orchestrator-kata/app",
+    "description": "Monorepo containing React frontend, .NET backend API, SQL database, and Python analytics sidecar for a financial checkbook application. This is a greenfield implementation - all source directories are currently empty.",
+    "tech_stack": {
+      "programming_languages": ["TypeScript", "C#", "Python", "SQL"],
+      "frameworks": ["React", ".NET", "Vite"],
+      "libraries": ["shadcn/ui", "@tanstack/react-table", "TailwindCSS", "MediatR", "Entity Framework Core", "Pydantic"],
+      "unit_testing_tools": ["NUnit (implied for .NET)", "Not yet specified for React/Python"]
+    },
+    "subprojects": [
+      {
+        "root": "app/src/ui",
+        "description": "React + TypeScript frontend for transaction display and management. Uses shadcn/ui for components, TanStack Table for transaction display, and React Context for state management. Currently empty - needs implementation.",
+        "tech_stack": {
+          "programming_language": "TypeScript",
+          "frameworks": ["React", "Vite"],
+          "libraries": ["shadcn/ui", "@tanstack/react-table", "TailwindCSS", "lucide-react", "react-router-dom", "Zod"],
+          "unit_testing_tools": ["Not yet specified"]
+        }
+      },
+      {
+        "root": "app/src/api",
+        "description": ".NET Web API implementing CQRS pattern with thin controllers, command/query handlers, service layer for business logic, and repository pattern for data access. Currently empty - needs implementation.",
+        "tech_stack": {
+          "programming_language": "C#",
+          "frameworks": [".NET"],
+          "libraries": ["MediatR", "Entity Framework Core", "AutoMapper"],
+          "unit_testing_tools": ["NUnit (implied from architecture examples)"]
+        }
+      },
+      {
+        "root": "app/src/db",
+        "description": "SQL database schema with Accounts, Transactions, and AccountSecurity tables. Normalized schema with foreign keys, constraints, and strategic indexes. Currently empty - needs schema and migrations.",
+        "tech_stack": {
+          "programming_language": "SQL",
+          "frameworks": [],
+          "libraries": ["PostgreSQL (implied from UUID usage)"],
+          "unit_testing_tools": []
+        }
+      },
+      {
+        "root": "app/src/analytics",
+        "description": "Python analytics sidecar for data analysis and reporting. Reads from shared database. Currently empty - needs implementation. Integration details are open questions.",
+        "tech_stack": {
+          "programming_language": "Python",
+          "frameworks": [],
+          "libraries": ["Pydantic", "async/await for I/O"],
+          "unit_testing_tools": ["Not yet specified"]
+        }
+      }
+    ]
+  },
+  "vault_audit": {
+    "decisions": [],
+    "persona": [],
+    "target_architecture": [
+      {
+        "path": "app/docs/ARCHITECTURE_TARGET.md",
+        "why": "Defines overall tech stack (React + TypeScript, .NET, SQL, Python), coding standards for all languages, and core functional requirements including transaction display/management, authentication, and business rules"
+      },
+      {
+        "path": "app/docs/ARCHITECTURE_BACKEND.md",
+        "why": "Specifies CQRS pattern with thin controllers, command/query handlers, service layer, and repository pattern. Provides detailed examples of transaction service implementation including business rule validation (insufficient funds, date constraints)"
+      },
+      {
+        "path": "app/docs/ARCHITECTURE_DATABASE.md",
+        "why": "Defines database schema with Accounts, Transactions, and AccountSecurity tables. Specifies foreign keys, constraints (amount > 0, no self-transfers), indexes for query optimization, and immutable transaction ledger design"
+      },
+      {
+        "path": "app/docs/ARCHITECTURE_UI.md",
+        "why": "Specifies React component organization, state management with hooks and context (AuthContext, TransactionContext), shadcn/ui component usage, TanStack Table for transaction display, and form validation patterns"
+      }
+    ]
+  },
+  "code_audit": {
+    "components": [],
+    "services": [],
+    "models": [],
+    "apis": [],
+    "tests": []
+  }
+}

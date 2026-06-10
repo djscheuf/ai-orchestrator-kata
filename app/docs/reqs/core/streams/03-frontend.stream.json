@@ -1,0 +1,114 @@
+{
+  "source_story": "app/docs/reqs/core/display-and-manage-transactions.analysis.json",
+  "overall_design": "app/docs/reqs/core/display-and-manage-transactions.design.json",
+  "story": {
+    "so_that": "I can track my financial activity and maintain an accurate account balance",
+    "as_a": "Bank account holder",
+    "i_want": "view my transactions, add new transactions, and see my current balance in a secure banking application"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "Display existing transactions for logged-in account",
+      "gherkin": "Given a user is logged in When they view the transaction list Then they see all transactions impacting their account sorted by date descending",
+      "status": "pending"
+    },
+    {
+      "criterion": "Add new transactions to existing accounts",
+      "gherkin": "Given a user is logged in When they submit a new transaction with valid date, payee, and amount Then the transaction is recorded and balance is updated immediately",
+      "status": "pending"
+    },
+    {
+      "criterion": "Maintain accurate running balance",
+      "gherkin": "Given transactions are displayed When a user views the balance Then it reflects the sum of all transactions for their account",
+      "status": "pending"
+    },
+    {
+      "criterion": "System handles up to 50-100 transactions displayed at once",
+      "gherkin": "Given an account has 100 transactions When the user views the transaction list Then all 100 are displayed without pagination and load time is under 2 seconds",
+      "status": "pending"
+    },
+    {
+      "criterion": "User session persists across page refreshes",
+      "gherkin": "Given a user is logged in When they refresh the page Then they remain logged in and see their transactions",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Empty payee field",
+      "gherkin": "Given a user is adding a transaction When they leave payee field empty Then the transaction is rejected with error 'Payee is required'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account with no transactions",
+      "gherkin": "Given a new account with zero transactions When a user logs in Then they see empty transaction list with message 'No transactions yet'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Invalid date format",
+      "gherkin": "Given a user is adding a transaction When they enter an invalid date format Then the transaction is rejected with error 'Invalid date format'",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    "app/docs/reqs/core/streams/01-foundations.stream.json"
+  ],
+  "steps": [
+    {
+      "description": "Implement AuthContext for state management and login form component",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Implement TransactionContext for transaction list and balance state",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement AuthContext for state management and login form component"]
+    },
+    {
+      "description": "Implement transaction list view with TanStack Table for sortable columns",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement TransactionContext for transaction list and balance state"]
+    },
+    {
+      "description": "Implement prominent balance display component",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement TransactionContext for transaction list and balance state"]
+    },
+    {
+      "description": "Implement form for creating new transactions with date picker, amount input, and target account selector",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement TransactionContext for transaction list and balance state"]
+    },
+    {
+      "description": "Implement main dashboard layout with routing between login and transaction views",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement AuthContext for state management and login form component", "Implement transaction list view with TanStack Table for sortable columns", "Implement prominent balance display component", "Implement form for creating new transactions with date picker, amount input, and target account selector"]
+    },
+    {
+      "description": "Implement unit tests for components and state management",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement main dashboard layout with routing between login and transaction views"]
+    },
+    {
+      "description": "Implement integration tests for component interactions and API calls",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement unit tests for components and state management"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/ARCHITECTURE_UI.md",
+      "app/docs/reqs/core/display-and-manage-transactions.design.json",
+      "app/docs/reqs/core/display-and-manage-transactions.analysis.json"
+    ],
+    "code": []
+  }
+}

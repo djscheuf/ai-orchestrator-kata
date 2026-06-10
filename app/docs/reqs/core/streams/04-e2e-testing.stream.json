@@ -1,0 +1,115 @@
+{
+  "source_story": "app/docs/reqs/core/display-and-manage-transactions.analysis.json",
+  "overall_design": "app/docs/reqs/core/display-and-manage-transactions.design.json",
+  "story": {
+    "so_that": "I can track my financial activity and maintain an accurate account balance",
+    "as_a": "Bank account holder",
+    "i_want": "view my transactions, add new transactions, and see my current balance in a secure banking application"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "Display existing transactions for logged-in account",
+      "gherkin": "Given a user is logged in When they view the transaction list Then they see all transactions impacting their account sorted by date descending",
+      "status": "pending"
+    },
+    {
+      "criterion": "Add new transactions to existing accounts",
+      "gherkin": "Given a user is logged in When they submit a new transaction with valid date, payee, and amount Then the transaction is recorded and balance is updated immediately",
+      "status": "pending"
+    },
+    {
+      "criterion": "Cannot create transactions for more money than available",
+      "gherkin": "Given an account has a balance of $100 When a user attempts to add a transaction of -$150 Then the transaction is rejected with error 'Insufficient funds'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Can only set transactions for today or past dates",
+      "gherkin": "Given a user is adding a transaction When they attempt to set a date in the future Then the transaction is rejected with error 'Future dates not allowed'",
+      "status": "pending"
+    },
+    {
+      "criterion": "User can log out",
+      "gherkin": "Given a user is logged in When they click logout Then their session ends and they return to login screen",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Account with no transactions",
+      "gherkin": "Given a new account with zero transactions When a user logs in Then they see empty transaction list with message 'No transactions yet'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account with exactly zero balance",
+      "gherkin": "Given an account has zero balance When a user attempts to add a negative transaction Then the transaction is rejected with error 'Insufficient funds'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Multiple users accessing same account simultaneously",
+      "gherkin": "Given two users are logged into the same account When one adds a transaction Then the other sees the updated balance after refresh",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    "app/docs/reqs/core/streams/01-foundations.stream.json",
+    "app/docs/reqs/core/streams/02-backend.stream.json",
+    "app/docs/reqs/core/streams/03-frontend.stream.json"
+  ],
+  "steps": [
+    {
+      "description": "Configure Playwright or similar E2E testing framework",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Test complete login and logout workflows",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Configure Playwright or similar E2E testing framework"]
+    },
+    {
+      "description": "Test transaction list retrieval and display",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Configure Playwright or similar E2E testing framework"]
+    },
+    {
+      "description": "Test complete transaction creation workflow",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Configure Playwright or similar E2E testing framework"]
+    },
+    {
+      "description": "Test that users only see their own transactions",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Configure Playwright or similar E2E testing framework"]
+    },
+    {
+      "description": "Test error scenarios and recovery",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Configure Playwright or similar E2E testing framework"]
+    },
+    {
+      "description": "Test performance requirements for transaction display",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Configure Playwright or similar E2E testing framework"]
+    },
+    {
+      "description": "Test behavior with multiple simultaneous users",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Configure Playwright or similar E2E testing framework"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/reqs/core/display-and-manage-transactions.analysis.json",
+      "app/docs/reqs/core/display-and-manage-transactions.design.json"
+    ],
+    "code": []
+  }
+}

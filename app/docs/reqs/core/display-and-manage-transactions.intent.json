@@ -1,0 +1,117 @@
+{
+  "raw_request": "app/docs/reqs/core/core-app-requirements.md",
+  "title": "Display and manage transactions in core financial application",
+  "story": {
+    "so_that": "I can track my financial activity and maintain an accurate account balance",
+    "as_a": "Bank account holder",
+    "i_want": "view my transactions, add new transactions, and see my current balance in a secure banking application"
+  },
+  "target_persona": {
+    "name": "Account Holder - Personal Banking User",
+    "role": "Customer",
+    "technical_level": "Novice",
+    "journey": {
+      "before": "User logs into their banking account with mock credentials",
+      "during": "User views their transaction history, adds new transactions, and monitors their account balance",
+      "after": "User logs out with confidence that their transactions are recorded and balance is accurate"
+    }
+  },
+  "capability_breakdown": {
+    "core_action": "Display transactions for logged-in account, add new transactions, and maintain accurate running balance",
+    "inputs": [
+      "User authentication credentials (mock password)",
+      "Transaction date (today or past dates only)",
+      "Transaction payee/recipient",
+      "Transaction amount (positive or negative)",
+      "Associated account"
+    ],
+    "outputs": [
+      "List of transactions filtered by account (up to 50-100 displayed, system handles 5,000-10,000)",
+      "Running account balance",
+      "Confirmation of new transaction added"
+    ],
+    "state_changes": [
+      "Account balance updated when transaction is added",
+      "New transaction persisted to transaction log",
+      "User session authenticated"
+    ],
+    "affected_components": {
+      "ui": "React UI for transaction display and entry",
+      "api": ".NET API for transaction management and balance calculation",
+      "database": "SQL database storing transactions and account data",
+      "external_services": "Python sidecar for data analytics"
+    }
+  },
+  "acceptance_criteria": [
+    {
+      "criterion": "Display existing transactions for logged-in account",
+      "gherkin": "Given a user is logged in When they view the transaction list Then they see all transactions impacting their account sorted by date",
+      "type": "Functional",
+      "jtbd": "View transaction history",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Add new transactions to existing accounts",
+      "gherkin": "Given a user is logged in When they submit a new transaction with date, payee, and amount Then the transaction is recorded and balance is updated",
+      "type": "Functional",
+      "jtbd": "Record new transaction",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Show only transactions that impact the current user's account",
+      "gherkin": "Given multiple accounts exist in the system When a user logs in Then they see only transactions where they are engaged",
+      "type": "Functional",
+      "jtbd": "See only relevant transactions",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Maintain accurate running balance",
+      "gherkin": "Given transactions are displayed When a user views the balance Then it reflects the sum of all transactions for their account",
+      "type": "Functional",
+      "jtbd": "Know current account balance",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Cannot create transactions for more money than available",
+      "gherkin": "Given an account has a limited balance When a user attempts to add a transaction exceeding available funds Then the transaction is rejected with an error",
+      "type": "Error handling",
+      "jtbd": "Prevent overdraft",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Can only set transactions for today or past dates",
+      "gherkin": "Given a user is adding a transaction When they attempt to set a future date Then the transaction is rejected",
+      "type": "Error handling",
+      "jtbd": "Prevent future-dated transactions",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Transactions cannot be deleted",
+      "gherkin": "Given a transaction exists When a user attempts to delete it Then no delete option is available",
+      "type": "Functional",
+      "jtbd": "Maintain immutable ledger",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "System handles up to 50-100 transactions displayed at once",
+      "gherkin": "Given an account has many transactions When the user views the transaction list Then up to 50-100 are displayed without pagination",
+      "type": "Non-functional",
+      "jtbd": "View large transaction sets efficiently",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "System handles 5,000-10,000 transactions in common transaction log",
+      "gherkin": "Given the system contains thousands of transactions When queries are executed Then performance remains acceptable",
+      "type": "Non-functional",
+      "jtbd": "Scale to large transaction volumes",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Mock authentication with 3-5 different accounts",
+      "gherkin": "Given multiple accounts exist When a user logs in with different credentials Then they access the correct account",
+      "type": "Functional",
+      "jtbd": "Authenticate to correct account",
+      "persona_served": "Account Holder - Personal Banking User"
+    }
+  ]
+}

@@ -1,0 +1,391 @@
+{
+  "raw_request": "app/docs/reqs/core/core-app-requirements.md",
+  "title": "Display and manage transactions in core financial application",
+  "story": {
+    "so_that": "I can track my financial activity and maintain an accurate account balance",
+    "as_a": "Bank account holder",
+    "i_want": "view my transactions, add new transactions, and see my current balance in a secure banking application"
+  },
+  "target_persona": {
+    "name": "Account Holder - Personal Banking User",
+    "role": "Customer",
+    "technical_level": "Novice",
+    "journey": {
+      "before": "User logs into their banking account with mock credentials",
+      "during": "User views their transaction history, adds new transactions, and monitors their account balance",
+      "after": "User logs out with confidence that their transactions are recorded and balance is accurate"
+    }
+  },
+  "capability_breakdown": {
+    "core_action": "Display transactions for logged-in account, add new transactions, and maintain accurate running balance",
+    "inputs": [
+      "User authentication credentials (mock password)",
+      "Transaction date (today or past dates only)",
+      "Transaction payee/recipient",
+      "Transaction amount (positive or negative)",
+      "Associated account"
+    ],
+    "outputs": [
+      "List of transactions filtered by account (up to 50-100 displayed, system handles 5,000-10,000)",
+      "Running account balance",
+      "Confirmation of new transaction added"
+    ],
+    "state_changes": [
+      "Account balance updated when transaction is added",
+      "New transaction persisted to transaction log",
+      "User session authenticated"
+    ],
+    "affected_components": {
+      "ui": [
+        "Login screen with account selection and password input",
+        "Transaction list view with date, payee, amount columns",
+        "Running balance display component",
+        "Add transaction form with date picker, payee input, amount input",
+        "Error message display for validation failures"
+      ],
+      "api": [
+        "POST /api/auth/login - authenticate user with mock credentials",
+        "GET /api/accounts/{accountId}/transactions - retrieve filtered transactions",
+        "GET /api/accounts/{accountId}/balance - get current balance",
+        "POST /api/accounts/{accountId}/transactions - create new transaction",
+        "Middleware for session validation"
+      ],
+      "database": [
+        "Accounts table (id, password_hash, balance)",
+        "Transactions table (id, account_id, date, payee, amount, created_at)",
+        "Index on transactions.account_id for filtering",
+        "Index on transactions.date for sorting"
+      ],
+      "external_services": [
+        "Python analytics sidecar for transaction data analysis",
+        "Analytics API endpoints for reporting"
+      ]
+    }
+  },
+  "acceptance_criteria": [
+    {
+      "criterion": "Display existing transactions for logged-in account",
+      "gherkin": "Given a user is logged in When they view the transaction list Then they see all transactions impacting their account sorted by date descending",
+      "type": "Functional",
+      "jtbd": "View transaction history",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": ["Mock authentication with 3-5 different accounts"]
+    },
+    {
+      "criterion": "Add new transactions to existing accounts",
+      "gherkin": "Given a user is logged in When they submit a new transaction with valid date, payee, and amount Then the transaction is recorded and balance is updated immediately",
+      "type": "Functional",
+      "jtbd": "Record new transaction",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": ["Maintain accurate running balance"]
+    },
+    {
+      "criterion": "Show only transactions that impact the current user's account",
+      "gherkin": "Given multiple accounts exist in the system When a user logs in Then they see only transactions where their account is involved",
+      "type": "Functional",
+      "jtbd": "See only relevant transactions",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": ["Mock authentication with 3-5 different accounts"]
+    },
+    {
+      "criterion": "Maintain accurate running balance",
+      "gherkin": "Given transactions are displayed When a user views the balance Then it reflects the sum of all transactions for their account",
+      "type": "Functional",
+      "jtbd": "Know current account balance",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": []
+    },
+    {
+      "criterion": "Cannot create transactions for more money than available",
+      "gherkin": "Given an account has a balance of $100 When a user attempts to add a transaction of -$150 Then the transaction is rejected with error 'Insufficient funds'",
+      "type": "Error handling",
+      "jtbd": "Prevent overdraft",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": ["Maintain accurate running balance"]
+    },
+    {
+      "criterion": "Can only set transactions for today or past dates",
+      "gherkin": "Given a user is adding a transaction When they attempt to set a date in the future Then the transaction is rejected with error 'Future dates not allowed'",
+      "type": "Error handling",
+      "jtbd": "Prevent future-dated transactions",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": []
+    },
+    {
+      "criterion": "Transactions cannot be deleted",
+      "gherkin": "Given a transaction exists in the list When a user views the transaction Then no delete button or option is available",
+      "type": "Functional",
+      "jtbd": "Maintain immutable ledger",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": []
+    },
+    {
+      "criterion": "System handles up to 50-100 transactions displayed at once",
+      "gherkin": "Given an account has 100 transactions When the user views the transaction list Then all 100 are displayed without pagination and load time is under 2 seconds",
+      "type": "Non-functional",
+      "jtbd": "View large transaction sets efficiently",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": []
+    },
+    {
+      "criterion": "System handles 5,000-10,000 transactions in common transaction log",
+      "gherkin": "Given the system contains 10,000 transactions across all accounts When queries are executed Then response time is under 3 seconds",
+      "type": "Non-functional",
+      "jtbd": "Scale to large transaction volumes",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": []
+    },
+    {
+      "criterion": "Mock authentication with 3-5 different accounts",
+      "gherkin": "Given 5 accounts exist (A-E) When a user logs in with Account B credentials Then they access Account B and see only Account B transactions",
+      "type": "Functional",
+      "jtbd": "Authenticate to correct account",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": []
+    },
+    {
+      "criterion": "User session persists across page refreshes",
+      "gherkin": "Given a user is logged in When they refresh the page Then they remain logged in and see their transactions",
+      "type": "Functional",
+      "jtbd": "Maintain session state",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": ["Mock authentication with 3-5 different accounts"]
+    },
+    {
+      "criterion": "User can log out",
+      "gherkin": "Given a user is logged in When they click logout Then their session ends and they return to login screen",
+      "type": "Functional",
+      "jtbd": "End session securely",
+      "persona_served": "Account Holder - Personal Banking User",
+      "testable": true,
+      "dependencies": ["Mock authentication with 3-5 different accounts"]
+    }
+  ],
+  "edge_cases": [
+    {
+      "criterion": "Empty payee field",
+      "gherkin": "Given a user is adding a transaction When they leave payee field empty Then the transaction is rejected with error 'Payee is required'",
+      "type": "Edge Case",
+      "jtbd": "Handle missing required fields",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Zero amount transaction",
+      "gherkin": "Given a user is adding a transaction When they enter amount as 0 Then the transaction is rejected with error 'Amount must be non-zero'",
+      "type": "Edge Case",
+      "jtbd": "Handle invalid amounts",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Very large transaction amount",
+      "gherkin": "Given a user is adding a transaction When they enter amount exceeding $1,000,000 Then the transaction is rejected with error 'Amount exceeds maximum'",
+      "type": "Edge Case",
+      "jtbd": "Handle boundary amounts",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Special characters in payee name",
+      "gherkin": "Given a user is adding a transaction When they enter payee with special characters (e.g., 'Café René') Then the transaction is accepted and displays correctly",
+      "type": "Edge Case",
+      "jtbd": "Handle unicode and special characters",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Very long payee name (500+ characters)",
+      "gherkin": "Given a user is adding a transaction When they enter payee name exceeding 500 characters Then the transaction is rejected with error 'Payee name too long'",
+      "type": "Edge Case",
+      "jtbd": "Handle input length limits",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Account with no transactions",
+      "gherkin": "Given a new account with zero transactions When a user logs in Then they see empty transaction list with message 'No transactions yet'",
+      "type": "Edge Case",
+      "jtbd": "Handle empty state",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Account with exactly zero balance",
+      "gherkin": "Given an account has zero balance When a user attempts to add a negative transaction Then the transaction is rejected with error 'Insufficient funds'",
+      "type": "Edge Case",
+      "jtbd": "Handle zero balance boundary",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Multiple users accessing same account simultaneously",
+      "gherkin": "Given two users are logged into the same account When one adds a transaction Then the other sees the updated balance after refresh",
+      "type": "Edge Case",
+      "jtbd": "Handle concurrent access",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Invalid date format",
+      "gherkin": "Given a user is adding a transaction When they enter an invalid date format Then the transaction is rejected with error 'Invalid date format'",
+      "type": "Edge Case",
+      "jtbd": "Handle malformed input",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Database connection failure during transaction creation",
+      "gherkin": "Given database is unavailable When a user attempts to add a transaction Then error message 'Service temporarily unavailable' is displayed",
+      "type": "Edge Case",
+      "jtbd": "Handle system failures gracefully",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Session expires while viewing transactions",
+      "gherkin": "Given a user session has expired When they attempt to add a transaction Then they are redirected to login with message 'Session expired'",
+      "type": "Edge Case",
+      "jtbd": "Handle expired sessions",
+      "persona_served": "Account Holder - Personal Banking User"
+    },
+    {
+      "criterion": "Invalid account credentials",
+      "gherkin": "Given a user enters incorrect password When they attempt to login Then error message 'Invalid credentials' is displayed",
+      "type": "Edge Case",
+      "jtbd": "Handle authentication failures",
+      "persona_served": "Account Holder - Personal Banking User"
+    }
+  ],
+  "open_questions": [
+    {
+      "question": "What is the maximum length for payee name?",
+      "impacts": ["database schema", "UI validation", "API validation"]
+    },
+    {
+      "question": "What is the maximum transaction amount allowed?",
+      "impacts": ["business rules", "database schema", "UI validation"]
+    },
+    {
+      "question": "How should the system handle decimal precision for amounts (2 decimal places, more)?",
+      "impacts": ["database schema", "calculation logic", "UI display"]
+    },
+    {
+      "question": "Should the running balance be calculated in real-time or cached?",
+      "impacts": ["performance", "data consistency", "API design"]
+    },
+    {
+      "question": "What happens when a transaction would result in negative balance? Hard reject or allow with warning?",
+      "impacts": ["business rules", "user experience", "validation logic"]
+    },
+    {
+      "question": "Should transactions be sorted by date ascending or descending by default?",
+      "impacts": ["user experience", "UI design"]
+    },
+    {
+      "question": "How long should user sessions last before expiring?",
+      "impacts": ["security", "user experience", "session management"]
+    },
+    {
+      "question": "Should the system support multiple currencies or single currency only?",
+      "impacts": ["database schema", "business logic", "UI display"]
+    },
+    {
+      "question": "What date format should be used for display (MM/DD/YYYY, DD/MM/YYYY, ISO)?",
+      "impacts": ["UI display", "localization", "user experience"]
+    },
+    {
+      "question": "Should the mock data generation utility be part of the application or separate tool?",
+      "impacts": ["deployment", "testing", "infrastructure"]
+    },
+    {
+      "question": "How should the Python analytics sidecar integrate with the main application?",
+      "impacts": ["architecture", "API design", "deployment"]
+    },
+    {
+      "question": "What analytics capabilities are needed from the Python sidecar in the core app?",
+      "impacts": ["feature scope", "API design", "integration points"]
+    }
+  ],
+  "dependencies": {
+    "technical": {
+      "existing_code": [],
+      "new_code": [
+        "React frontend application with routing and state management",
+        ".NET Web API with controllers for auth, accounts, and transactions",
+        "SQL database schema for accounts and transactions",
+        "Authentication middleware for session management",
+        "Balance calculation service",
+        "Transaction validation service",
+        "Python analytics sidecar application"
+      ],
+      "infrastructure": [
+        "SQL database server",
+        "Web server for React frontend",
+        "API server for .NET backend",
+        "Python runtime for analytics sidecar",
+        "Session storage (in-memory or Redis)"
+      ],
+      "external_services": []
+    },
+    "story": {
+      "blocked_by": [],
+      "blocks": [
+        "Transaction categorization feature",
+        "Future/scheduled transactions feature",
+        "Transaction search and filtering feature"
+      ],
+      "related": [
+        "Mock data generation utility (supporting infrastructure)"
+      ]
+    },
+    "knowledge": {
+      "domain_knowledge": [
+        "Basic accounting principles (debits/credits)",
+        "Immutable ledger concept",
+        "Balance calculation rules"
+      ],
+      "technical_knowledge": [
+        "React with TypeScript",
+        ".NET Web API development",
+        "SQL database design and indexing",
+        "Python for analytics",
+        "Session-based authentication"
+      ],
+      "stakeholder_questions": [
+        "Clarify decimal precision requirements",
+        "Confirm maximum transaction amount",
+        "Define session timeout duration",
+        "Specify date format preference",
+        "Clarify analytics integration requirements"
+      ]
+    }
+  },
+  "complexity": {
+    "story_points": 13,
+    "risk_level": "Medium",
+    "uncertainty": "Medium"
+  },
+  "recommendation": {
+    "approach": "Build this as the foundational core application first, as all other features depend on it. Implement in phases: (1) Authentication and account isolation, (2) Transaction display with filtering, (3) Transaction creation with validation, (4) Balance calculation and display. Use TDD approach with comprehensive test coverage for business rules.",
+    "risks": [
+      "Balance calculation errors could cause data integrity issues - mitigate with extensive unit tests and validation",
+      "Concurrent transaction creation could lead to race conditions - implement proper transaction isolation in database",
+      "Performance degradation with large transaction volumes - ensure proper database indexing and query optimization",
+      "Session management complexity - use established session libraries rather than custom implementation"
+    ],
+    "alternatives_considered": [
+      "Single-page application vs multi-page: Chose SPA (React) for better user experience and state management",
+      "Real-time balance calculation vs cached: Recommend real-time calculation for accuracy, with caching as optimization if needed",
+      "Mock authentication vs real auth: Mock is sufficient for benchmark purposes and reduces complexity"
+    ],
+    "next_steps": [
+      "Clarify open questions with stakeholders (decimal precision, max amounts, date formats)",
+      "Create database schema and migration scripts",
+      "Set up project structure for React frontend and .NET backend",
+      "Implement mock data generation utility for testing",
+      "Begin TDD cycle starting with authentication tests"
+    ]
+  }
+}

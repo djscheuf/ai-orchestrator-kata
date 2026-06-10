@@ -1,0 +1,980 @@
+{
+  "story_path": "app/docs/reqs/core/display-and-manage-transactions.analysis.json",
+  "repo_state_before_design": "app/docs/reqs/core/display-and-manage-transactions.audit.json",
+  "workflow_sequence": [
+    {
+      "step": 1,
+      "description": "User navigates to application and sees login screen",
+      "layers_involved": ["Frontend"],
+      "handshake_points": []
+    },
+    {
+      "step": 2,
+      "description": "User submits login credentials (username and password)",
+      "layers_involved": ["Frontend", "Backend"],
+      "handshake_points": [
+        {
+          "from_layer": "Frontend",
+          "to_layer": "Backend",
+          "contract_used": "POST /api/auth/login",
+          "data_shape": {
+            "username": "string",
+            "password": "string"
+          }
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "description": "Backend validates credentials against AccountSecurity table and generates bearer token",
+      "layers_involved": ["Backend", "Database"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Database",
+          "contract_used": "Query AccountSecurity by username",
+          "data_shape": {
+            "query": "SELECT account_id, password_hash FROM AccountSecurity WHERE username = ?",
+            "returns": {
+              "account_id": "UUID",
+              "password_hash": "string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "description": "Backend returns authentication token and account details to frontend",
+      "layers_involved": ["Backend", "Frontend"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Frontend",
+          "contract_used": "LoginResponse",
+          "data_shape": {
+            "accountId": "UUID",
+            "accountName": "string",
+            "token": "string (JWT bearer token)"
+          }
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "description": "Frontend stores token in localStorage and updates AuthContext",
+      "layers_involved": ["Frontend"],
+      "handshake_points": []
+    },
+    {
+      "step": 6,
+      "description": "Frontend navigates to dashboard and requests transactions for logged-in account",
+      "layers_involved": ["Frontend", "Backend"],
+      "handshake_points": [
+        {
+          "from_layer": "Frontend",
+          "to_layer": "Backend",
+          "contract_used": "GET /api/accounts/{accountId}/transactions",
+          "data_shape": {
+            "headers": {
+              "Authorization": "Bearer {token}"
+            },
+            "path_params": {
+              "accountId": "UUID"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "description": "Backend validates token, retrieves transactions where account is source or target",
+      "layers_involved": ["Backend", "Database"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Database",
+          "contract_used": "Query Transactions by account_id",
+          "data_shape": {
+            "query": "SELECT * FROM Transactions WHERE source_account_id = ? OR target_account_id = ? ORDER BY transaction_date DESC, created_at DESC",
+            "returns": "Array of Transaction records"
+          }
+        }
+      ]
+    },
+    {
+      "step": 8,
+      "description": "Backend calculates running balance for account",
+      "layers_involved": ["Backend", "Database"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Database",
+          "contract_used": "Calculate account balance",
+          "data_shape": {
+            "incoming_sum": "SUM(amount) WHERE target_account_id = ?",
+            "outgoing_sum": "SUM(amount) WHERE source_account_id = ?",
+            "balance": "incoming_sum - outgoing_sum"
+          }
+        }
+      ]
+    },
+    {
+      "step": 9,
+      "description": "Backend returns transactions and balance to frontend",
+      "layers_involved": ["Backend", "Frontend"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Frontend",
+          "contract_used": "TransactionListResponse",
+          "data_shape": {
+            "transactions": [
+              {
+                "id": "UUID",
+                "sourceAccountId": "UUID",
+                "targetAccountId": "UUID",
+                "amount": "decimal",
+                "date": "ISO 8601 date string",
+                "createdAt": "ISO 8601 datetime string"
+              }
+            ],
+            "balance": "decimal"
+          }
+        }
+      ]
+    },
+    {
+      "step": 10,
+      "description": "Frontend displays transactions in TanStack Table with balance",
+      "layers_involved": ["Frontend"],
+      "handshake_points": []
+    },
+    {
+      "step": 11,
+      "description": "User clicks 'Add Transaction' button to open form",
+      "layers_involved": ["Frontend"],
+      "handshake_points": []
+    },
+    {
+      "step": 12,
+      "description": "User fills in transaction details (target account, amount, date) and submits",
+      "layers_involved": ["Frontend", "Backend"],
+      "handshake_points": [
+        {
+          "from_layer": "Frontend",
+          "to_layer": "Backend",
+          "contract_used": "POST /api/accounts/{accountId}/transactions",
+          "data_shape": {
+            "headers": {
+              "Authorization": "Bearer {token}"
+            },
+            "body": {
+              "targetAccountId": "UUID",
+              "amount": "decimal (positive)",
+              "date": "ISO 8601 date string (today or past)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": 13,
+      "description": "Backend validates transaction (sufficient funds, valid date, non-zero amount)",
+      "layers_involved": ["Backend", "Database"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Database",
+          "contract_used": "Get current account balance",
+          "data_shape": {
+            "query": "Calculate balance for validation",
+            "returns": "decimal balance"
+          }
+        }
+      ]
+    },
+    {
+      "step": 14,
+      "description": "Backend creates transaction record in database",
+      "layers_involved": ["Backend", "Database"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Database",
+          "contract_used": "Insert Transaction",
+          "data_shape": {
+            "transaction_id": "UUID (generated)",
+            "source_account_id": "UUID (from token)",
+            "target_account_id": "UUID (from request)",
+            "amount": "decimal",
+            "transaction_date": "date",
+            "created_at": "timestamp (current)"
+          }
+        }
+      ]
+    },
+    {
+      "step": 15,
+      "description": "Backend returns created transaction to frontend",
+      "layers_involved": ["Backend", "Frontend"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Frontend",
+          "contract_used": "TransactionResponse",
+          "data_shape": {
+            "id": "UUID",
+            "sourceAccountId": "UUID",
+            "targetAccountId": "UUID",
+            "amount": "decimal",
+            "date": "ISO 8601 date string",
+            "createdAt": "ISO 8601 datetime string"
+          }
+        }
+      ]
+    },
+    {
+      "step": 16,
+      "description": "Frontend refreshes transaction list and balance",
+      "layers_involved": ["Frontend", "Backend"],
+      "handshake_points": [
+        {
+          "from_layer": "Frontend",
+          "to_layer": "Backend",
+          "contract_used": "GET /api/accounts/{accountId}/transactions",
+          "data_shape": "Same as step 6"
+        }
+      ]
+    },
+    {
+      "step": 17,
+      "description": "User clicks logout button",
+      "layers_involved": ["Frontend"],
+      "handshake_points": []
+    },
+    {
+      "step": 18,
+      "description": "Frontend clears token from localStorage and AuthContext, redirects to login",
+      "layers_involved": ["Frontend"],
+      "handshake_points": []
+    }
+  ],
+  "instrumentation_events": [
+    {
+      "event_name": "UserLoginAttempt",
+      "description": "Track login attempts for security monitoring",
+      "layers_involved": ["Backend"],
+      "data_points": [
+        {
+          "point": "username",
+          "description": "Username attempting login"
+        },
+        {
+          "point": "success",
+          "description": "Whether login succeeded"
+        },
+        {
+          "point": "timestamp",
+          "description": "When login was attempted"
+        },
+        {
+          "point": "ip_address",
+          "description": "Source IP of request"
+        }
+      ]
+    },
+    {
+      "event_name": "TransactionCreated",
+      "description": "Track transaction creation for audit trail",
+      "layers_involved": ["Backend"],
+      "data_points": [
+        {
+          "point": "transaction_id",
+          "description": "Unique transaction identifier"
+        },
+        {
+          "point": "source_account_id",
+          "description": "Account sending money"
+        },
+        {
+          "point": "target_account_id",
+          "description": "Account receiving money"
+        },
+        {
+          "point": "amount",
+          "description": "Transaction amount"
+        },
+        {
+          "point": "timestamp",
+          "description": "When transaction was created"
+        }
+      ]
+    },
+    {
+      "event_name": "TransactionValidationFailed",
+      "description": "Track validation failures for business rule monitoring",
+      "layers_involved": ["Backend"],
+      "data_points": [
+        {
+          "point": "account_id",
+          "description": "Account attempting transaction"
+        },
+        {
+          "point": "failure_reason",
+          "description": "Why validation failed (insufficient_funds, future_date, zero_amount, etc.)"
+        },
+        {
+          "point": "requested_amount",
+          "description": "Amount that was requested"
+        },
+        {
+          "point": "current_balance",
+          "description": "Current account balance at time of failure"
+        },
+        {
+          "point": "timestamp",
+          "description": "When validation failed"
+        }
+      ]
+    },
+    {
+      "event_name": "TransactionListViewed",
+      "description": "Track transaction list views for usage analytics",
+      "layers_involved": ["Backend"],
+      "data_points": [
+        {
+          "point": "account_id",
+          "description": "Account viewing transactions"
+        },
+        {
+          "point": "transaction_count",
+          "description": "Number of transactions returned"
+        },
+        {
+          "point": "response_time_ms",
+          "description": "Time to retrieve and return transactions"
+        },
+        {
+          "point": "timestamp",
+          "description": "When list was viewed"
+        }
+      ]
+    },
+    {
+      "event_name": "SessionExpired",
+      "description": "Track session expirations for security and UX monitoring",
+      "layers_involved": ["Backend"],
+      "data_points": [
+        {
+          "point": "account_id",
+          "description": "Account whose session expired"
+        },
+        {
+          "point": "session_duration_minutes",
+          "description": "How long session lasted"
+        },
+        {
+          "point": "timestamp",
+          "description": "When session expired"
+        }
+      ]
+    }
+  ],
+  "layer_responsibilities": [
+    {
+      "layer": "Frontend",
+      "new_responsibilities": [
+        {
+          "responsibility": "Display login form with username and password inputs",
+          "intent": "Frontend owns UI presentation and user input collection"
+        },
+        {
+          "responsibility": "Store authentication token in localStorage",
+          "intent": "Frontend owns session persistence across page refreshes"
+        },
+        {
+          "responsibility": "Provide AuthContext for sharing authentication state across components",
+          "intent": "Frontend owns state management for authenticated user"
+        },
+        {
+          "responsibility": "Display transaction list using TanStack Table with sortable columns",
+          "intent": "Frontend owns data presentation and user interaction patterns"
+        },
+        {
+          "responsibility": "Display current account balance prominently",
+          "intent": "Frontend owns visual hierarchy and emphasis of key information"
+        },
+        {
+          "responsibility": "Provide 'Add Transaction' form with date picker, amount input, and target account selector",
+          "intent": "Frontend owns user input collection and form UX"
+        },
+        {
+          "responsibility": "Validate form inputs client-side (required fields, date format, amount format)",
+          "intent": "Frontend owns immediate user feedback for input errors"
+        },
+        {
+          "responsibility": "Display error messages from backend validation failures",
+          "intent": "Frontend owns error presentation to user"
+        },
+        {
+          "responsibility": "Show loading states during API calls",
+          "intent": "Frontend owns user feedback during async operations"
+        },
+        {
+          "responsibility": "Provide logout button and clear session on logout",
+          "intent": "Frontend owns session termination UX"
+        },
+        {
+          "responsibility": "Format currency amounts for display (USD with 2 decimals)",
+          "intent": "Frontend owns localization and formatting of displayed data"
+        },
+        {
+          "responsibility": "Format dates for display (using Intl.DateTimeFormat)",
+          "intent": "Frontend owns date presentation formatting"
+        },
+        {
+          "responsibility": "Handle empty state when no transactions exist",
+          "intent": "Frontend owns empty state UX"
+        }
+      ]
+    },
+    {
+      "layer": "Backend",
+      "new_responsibilities": [
+        {
+          "responsibility": "Validate login credentials against AccountSecurity table",
+          "intent": "Backend owns authentication enforcement - security boundary"
+        },
+        {
+          "responsibility": "Generate and sign JWT bearer tokens scoped to account ID",
+          "intent": "Backend owns token generation and security - information originates here"
+        },
+        {
+          "responsibility": "Validate bearer token on all protected endpoints",
+          "intent": "Backend owns authorization enforcement - security boundary"
+        },
+        {
+          "responsibility": "Enforce account isolation - only return transactions for authenticated account",
+          "intent": "Backend owns data access control - security boundary"
+        },
+        {
+          "responsibility": "Validate transaction creation business rules (sufficient funds, valid date, non-zero amount)",
+          "intent": "Backend owns business logic enforcement - defensible zone"
+        },
+        {
+          "responsibility": "Calculate account balance in real-time from transaction history",
+          "intent": "Backend owns derived data calculation - information originates from aggregation"
+        },
+        {
+          "responsibility": "Enforce transaction immutability (no updates or deletes)",
+          "intent": "Backend owns business rule enforcement - defensible zone"
+        },
+        {
+          "responsibility": "Return user-friendly error messages for validation failures",
+          "intent": "Backend owns error message generation - information about failure originates here"
+        },
+        {
+          "responsibility": "Log instrumentation events for monitoring and audit",
+          "intent": "Backend owns observability - events originate from business operations"
+        },
+        {
+          "responsibility": "Update last_login_at timestamp on successful authentication",
+          "intent": "Backend owns audit trail maintenance - information originates here"
+        }
+      ]
+    },
+    {
+      "layer": "Database",
+      "new_responsibilities": [
+        {
+          "responsibility": "Store account information (account_id, account_name, timestamps)",
+          "intent": "Database owns persistent storage of core entities"
+        },
+        {
+          "responsibility": "Store authentication credentials (username, password_hash, last_login_at)",
+          "intent": "Database owns persistent storage of security data"
+        },
+        {
+          "responsibility": "Store transaction records (immutable ledger)",
+          "intent": "Database owns persistent storage of financial transactions"
+        },
+        {
+          "responsibility": "Enforce foreign key constraints between Transactions and Accounts",
+          "intent": "Database owns referential integrity - constraint originates at schema level"
+        },
+        {
+          "responsibility": "Enforce CHECK constraint that amount > 0",
+          "intent": "Database owns data integrity constraint - validation at storage level"
+        },
+        {
+          "responsibility": "Enforce CHECK constraint that source_account_id != target_account_id",
+          "intent": "Database owns data integrity constraint - validation at storage level"
+        },
+        {
+          "responsibility": "Provide indexes for efficient transaction queries by account and date",
+          "intent": "Database owns query performance optimization"
+        },
+        {
+          "responsibility": "Generate UUIDs for new records",
+          "intent": "Database owns unique identifier generation"
+        },
+        {
+          "responsibility": "Set timestamps automatically (created_at, updated_at)",
+          "intent": "Database owns automatic timestamp management"
+        }
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "contract_type": "DataModel",
+      "name": "Account",
+      "description": "Represents a financial account in the system",
+      "changes": {
+        "added": {
+          "table": "Accounts",
+          "columns": [
+            "account_id UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+            "account_name VARCHAR(255) NOT NULL",
+            "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+          ],
+          "indexes": [
+            "idx_accounts_name ON account_name"
+          ]
+        },
+        "modified": null,
+        "removed": null
+      }
+    },
+    {
+      "contract_type": "DataModel",
+      "name": "Transaction",
+      "description": "Represents a financial transaction between two accounts (immutable ledger)",
+      "changes": {
+        "added": {
+          "table": "Transactions",
+          "columns": [
+            "transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+            "source_account_id UUID NOT NULL REFERENCES Accounts(account_id) ON DELETE RESTRICT",
+            "target_account_id UUID NOT NULL REFERENCES Accounts(account_id) ON DELETE RESTRICT",
+            "amount DECIMAL(19, 2) NOT NULL CHECK (amount > 0)",
+            "transaction_date DATE NOT NULL",
+            "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "CHECK (source_account_id != target_account_id)"
+          ],
+          "indexes": [
+            "idx_transactions_source ON source_account_id",
+            "idx_transactions_target ON target_account_id",
+            "idx_transactions_date ON transaction_date DESC",
+            "idx_transactions_account_date ON (source_account_id, transaction_date DESC)",
+            "idx_transactions_account_date_target ON (target_account_id, transaction_date DESC)"
+          ],
+          "permissions": "INSERT only (no UPDATE or DELETE)"
+        },
+        "modified": null,
+        "removed": null
+      }
+    },
+    {
+      "contract_type": "DataModel",
+      "name": "AccountSecurity",
+      "description": "Stores authentication credentials and audit information (one-to-one with Account)",
+      "changes": {
+        "added": {
+          "table": "AccountSecurity",
+          "columns": [
+            "security_id UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+            "account_id UUID NOT NULL UNIQUE REFERENCES Accounts(account_id) ON DELETE CASCADE",
+            "username VARCHAR(255) NOT NULL UNIQUE",
+            "password_hash VARCHAR(255) NOT NULL",
+            "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "last_login_at TIMESTAMP"
+          ],
+          "indexes": [
+            "idx_account_security_username ON username",
+            "idx_account_security_account_id ON account_id"
+          ]
+        },
+        "modified": null,
+        "removed": null
+      }
+    },
+    {
+      "contract_type": "APIContract",
+      "name": "POST /api/auth/login",
+      "description": "Authenticate user and return bearer token",
+      "changes": {
+        "added": {
+          "method": "POST",
+          "path": "/api/auth/login",
+          "request_body": {
+            "username": "string (required)",
+            "password": "string (required)"
+          },
+          "responses": {
+            "200": {
+              "accountId": "UUID",
+              "accountName": "string",
+              "token": "string (JWT bearer token)"
+            },
+            "401": {
+              "error": "Invalid credentials"
+            },
+            "400": {
+              "error": "Username and password are required"
+            }
+          },
+          "authentication": "None (public endpoint)"
+        },
+        "modified": null,
+        "removed": null
+      }
+    },
+    {
+      "contract_type": "APIContract",
+      "name": "GET /api/accounts/{accountId}/transactions",
+      "description": "Retrieve all transactions for authenticated account",
+      "changes": {
+        "added": {
+          "method": "GET",
+          "path": "/api/accounts/{accountId}/transactions",
+          "path_parameters": {
+            "accountId": "UUID (must match token account ID)"
+          },
+          "query_parameters": null,
+          "responses": {
+            "200": {
+              "transactions": [
+                {
+                  "id": "UUID",
+                  "sourceAccountId": "UUID",
+                  "targetAccountId": "UUID",
+                  "amount": "decimal",
+                  "date": "ISO 8601 date string",
+                  "createdAt": "ISO 8601 datetime string"
+                }
+              ],
+              "balance": "decimal"
+            },
+            "401": {
+              "error": "Unauthorized - invalid or missing token"
+            },
+            "403": {
+              "error": "Forbidden - account ID does not match token"
+            }
+          },
+          "authentication": "Bearer token required"
+        },
+        "modified": null,
+        "removed": null
+      }
+    },
+    {
+      "contract_type": "APIContract",
+      "name": "POST /api/accounts/{accountId}/transactions",
+      "description": "Create new transaction from authenticated account to target account",
+      "changes": {
+        "added": {
+          "method": "POST",
+          "path": "/api/accounts/{accountId}/transactions",
+          "path_parameters": {
+            "accountId": "UUID (must match token account ID, becomes source_account_id)"
+          },
+          "request_body": {
+            "targetAccountId": "UUID (required)",
+            "amount": "decimal (required, must be > 0)",
+            "date": "ISO 8601 date string (required, must be today or past)"
+          },
+          "responses": {
+            "201": {
+              "id": "UUID",
+              "sourceAccountId": "UUID",
+              "targetAccountId": "UUID",
+              "amount": "decimal",
+              "date": "ISO 8601 date string",
+              "createdAt": "ISO 8601 datetime string"
+            },
+            "400": {
+              "error": "Amount must be non-zero | Future dates not allowed | Invalid date format | Target account is required"
+            },
+            "401": {
+              "error": "Unauthorized - invalid or missing token"
+            },
+            "403": {
+              "error": "Forbidden - account ID does not match token"
+            },
+            "422": {
+              "error": "Insufficient funds | Target account not found"
+            }
+          },
+          "authentication": "Bearer token required"
+        },
+        "modified": null,
+        "removed": null
+      }
+    },
+    {
+      "contract_type": "InteractionPattern",
+      "name": "Client-side transaction display",
+      "description": "Frontend retrieves all transactions in one call and handles sorting/display locally",
+      "changes": {
+        "added": {
+          "pattern": "Single bulk fetch",
+          "rationale": "No pagination required for 50-100 transactions. Simpler implementation, better UX (instant sorting), reduces server load",
+          "frontend_behavior": "Fetch all transactions on dashboard load, sort locally using TanStack Table, no additional API calls for sorting",
+          "backend_behavior": "Return all transactions for account in single response, sorted by date DESC",
+          "caching": "Frontend can cache in TransactionContext, refresh on transaction creation or manual refresh"
+        },
+        "modified": null,
+        "removed": null
+      }
+    },
+    {
+      "contract_type": "InteractionPattern",
+      "name": "Real-time balance calculation",
+      "description": "Backend calculates balance on-demand from transaction history",
+      "changes": {
+        "added": {
+          "pattern": "Calculated property",
+          "rationale": "Balance is derived from transactions (functional alchemy). Real-time calculation ensures accuracy, no risk of stale cached balance",
+          "frontend_behavior": "Display balance returned from API, no client-side calculation",
+          "backend_behavior": "Calculate balance on each transaction list request: SUM(incoming) - SUM(outgoing)",
+          "optimization": "If performance issues arise with 5,000-10,000 transactions, add materialized view or cached balance with invalidation on transaction creation"
+        },
+        "modified": null,
+        "removed": null
+      }
+    },
+    {
+      "contract_type": "InteractionPattern",
+      "name": "Token-based authentication",
+      "description": "JWT bearer token scoped to account ID, stored in localStorage",
+      "changes": {
+        "added": {
+          "pattern": "Stateless JWT authentication",
+          "rationale": "Simple mock authentication, no session storage needed, token contains account ID for authorization",
+          "frontend_behavior": "Store token in localStorage on login, include in Authorization header on all API calls, clear on logout",
+          "backend_behavior": "Generate JWT with account ID claim on login, validate token signature and expiration on protected endpoints, extract account ID from token for authorization",
+          "session_duration": "30 minutes (configurable)",
+          "token_payload": {
+            "accountId": "UUID",
+            "exp": "Unix timestamp (30 minutes from issue)"
+          }
+        },
+        "modified": null,
+        "removed": null
+      }
+    }
+  ],
+  "architectural_decisions": [
+    {
+      "decision": "Use CQRS pattern with MediatR for backend API",
+      "justification": "Separates read and write operations, provides clear separation of concerns, enables independent scaling of read/write paths, simplifies testing",
+      "basis": "app/docs/ARCHITECTURE_BACKEND.md - established pattern for this application",
+      "impact": "All API endpoints will use Command/Query handlers instead of direct controller logic",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Use Repository pattern for data access",
+      "justification": "Abstracts database operations, enables mocking for unit tests, provides single point for query optimization",
+      "basis": "app/docs/ARCHITECTURE_BACKEND.md - established pattern for this application",
+      "impact": "All database access goes through ITransactionRepository, IAccountRepository, IAccountSecurityRepository interfaces",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Use React Context for state management (AuthContext, TransactionContext)",
+      "justification": "Simple state management without global state library, co-located with components that use it, sufficient for application scope",
+      "basis": "app/docs/ARCHITECTURE_UI.md - established pattern for this application",
+      "impact": "No Redux or similar library needed, state management via hooks and context providers",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Use TanStack Table for transaction display",
+      "justification": "Provides sortable columns, efficient rendering, extensible for future features (filtering, pagination)",
+      "basis": "app/docs/ARCHITECTURE_UI.md - specified library for table display",
+      "impact": "Transaction list will use TanStack Table component with column definitions",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Use shadcn/ui for all UI components",
+      "justification": "Modern, accessible component library, consistent design system, TailwindCSS integration",
+      "basis": "app/docs/ARCHITECTURE_UI.md - established UI library for this application",
+      "impact": "All UI components (Button, Input, Card, Dialog, Form) will use shadcn/ui",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Store transactions with amount always positive, direction determined by source/target accounts",
+      "justification": "Simplifies balance calculation, enforces data integrity at database level, aligns with double-entry bookkeeping principles",
+      "basis": "app/docs/ARCHITECTURE_DATABASE.md - established schema design",
+      "impact": "Transaction amount is always > 0, CHECK constraint enforces this, balance calculated as incoming - outgoing",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Use UUID for all primary keys",
+      "justification": "Enables distributed systems, avoids sequential ID enumeration attacks, supports future scaling",
+      "basis": "app/docs/ARCHITECTURE_DATABASE.md - established schema design",
+      "impact": "All tables use UUID primary keys generated by database",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Implement immutable transaction ledger (no updates or deletes)",
+      "justification": "Maintains audit trail, prevents data tampering, aligns with financial accounting principles",
+      "basis": "app/docs/ARCHITECTURE_DATABASE.md and story requirement - established constraint",
+      "impact": "No UPDATE or DELETE permissions on Transactions table, only INSERT allowed",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Calculate balance in real-time from transaction history",
+      "justification": "Ensures accuracy, no risk of stale cached balance, sufficient performance for 50-100 transactions per account",
+      "basis": "Functional alchemy principle - balance is derived property",
+      "impact": "Balance calculated on each transaction list request, no separate balance column in Accounts table",
+      "answers_open_question": "Should the running balance be calculated in real-time or cached? - Answer: Real-time, with caching as future optimization if needed"
+    },
+    {
+      "decision": "Use client-side sorting with single bulk fetch (no pagination)",
+      "justification": "Simpler implementation, better UX (instant sorting), reduces server load, sufficient for 50-100 transactions",
+      "basis": "Story requirement - no pagination in core app, display 50-100 transactions",
+      "impact": "Frontend fetches all transactions in one call, sorts locally using TanStack Table",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Use JWT bearer tokens for authentication",
+      "justification": "Stateless authentication, no server-side session storage needed, token contains account ID for authorization",
+      "basis": "app/docs/ARCHITECTURE_TARGET.md - specified authentication approach",
+      "impact": "Backend generates JWT on login, frontend stores in localStorage, token included in Authorization header",
+      "answers_open_question": null
+    },
+    {
+      "decision": "Set session timeout to 30 minutes of inactivity",
+      "justification": "Balances security (prevents abandoned sessions) with UX (not too aggressive), industry standard for financial applications",
+      "basis": "Industry best practice for financial applications",
+      "impact": "JWT tokens expire after 30 minutes, frontend redirects to login on 401 response",
+      "answers_open_question": "How long should user sessions last before expiring? - Answer: 30 minutes"
+    },
+    {
+      "decision": "Use DECIMAL(19, 2) for transaction amounts",
+      "justification": "Standard precision for USD currency (2 decimal places), sufficient range for typical transactions",
+      "basis": "app/docs/ARCHITECTURE_DATABASE.md - established schema design",
+      "impact": "All amounts stored with 2 decimal places, frontend formats as currency",
+      "answers_open_question": "How should the system handle decimal precision for amounts? - Answer: 2 decimal places (DECIMAL(19, 2))"
+    },
+    {
+      "decision": "Set maximum transaction amount to $1,000,000",
+      "justification": "Reasonable limit for personal banking, prevents data entry errors, aligns with edge case testing",
+      "basis": "Edge case from story analysis - very large transaction amount",
+      "impact": "Backend validates amount <= 1,000,000, frontend shows error if exceeded",
+      "answers_open_question": "What is the maximum transaction amount allowed? - Answer: $1,000,000"
+    },
+    {
+      "decision": "Set maximum payee name length to 500 characters",
+      "justification": "Sufficient for any reasonable payee name, prevents abuse, aligns with edge case testing",
+      "basis": "Edge case from story analysis - very long payee name",
+      "impact": "Backend validates payee length <= 500, database schema allows VARCHAR(500) for payee if needed",
+      "answers_open_question": "What is the maximum length for payee name? - Answer: 500 characters"
+    },
+    {
+      "decision": "Use Intl.DateTimeFormat with en-US locale for date display",
+      "justification": "Standard JavaScript internationalization API, consistent formatting, aligns with architecture examples",
+      "basis": "app/docs/ARCHITECTURE_UI.md - example formatting code",
+      "impact": "Frontend formats dates as 'MMM DD, YYYY' (e.g., 'Jan 15, 2026')",
+      "answers_open_question": "What date format should be used for display? - Answer: en-US locale with Intl.DateTimeFormat"
+    },
+    {
+      "decision": "Create mock data seeding script as separate tool in app/src/db",
+      "justification": "Separates test data generation from application code, enables easy database reset for development/testing",
+      "basis": "Best practice for development tooling",
+      "impact": "Seeding script creates 3-5 accounts with credentials and 100+ sample transactions",
+      "answers_open_question": "Should the mock data generation utility be part of the application or separate tool? - Answer: Separate seeding script"
+    },
+    {
+      "decision": "Defer analytics sidecar integration until core app is functional",
+      "justification": "Core transaction management is foundational, analytics is secondary, reduces initial complexity",
+      "basis": "Story analysis recommendation - analytics is future enhancement",
+      "impact": "Python analytics sidecar will be implemented after core app is working, integration points TBD",
+      "answers_open_question": "How should the Python analytics sidecar integrate with the main application? - Answer: Deferred to future story"
+    },
+    {
+      "decision": "Use composite indexes on (account_id, transaction_date DESC) for transaction queries",
+      "justification": "Optimizes most common query pattern (transactions for account sorted by date), reduces query time for 5,000-10,000 transactions",
+      "basis": "app/docs/ARCHITECTURE_DATABASE.md - specified index strategy",
+      "impact": "Database will have composite indexes on both source_account_id and target_account_id with date",
+      "answers_open_question": null
+    }
+  ],
+  "questions_addressed": [
+    {
+      "question": "Should the running balance be calculated in real-time or cached?",
+      "answer": "Real-time calculation from transaction history",
+      "justification": "Ensures accuracy, no risk of stale cached balance, sufficient performance for 50-100 transactions per account. If performance issues arise with 5,000-10,000 total transactions, can add materialized view or cached balance with invalidation.",
+      "basis": "Functional alchemy principle - balance is derived property. Story requirement for accurate balance display."
+    },
+    {
+      "question": "How long should user sessions last before expiring?",
+      "answer": "30 minutes of inactivity",
+      "justification": "Balances security (prevents abandoned sessions) with UX (not too aggressive). Standard for financial applications.",
+      "basis": "Industry best practice for financial applications per OWASP guidelines"
+    },
+    {
+      "question": "What is the maximum transaction amount allowed?",
+      "answer": "$1,000,000",
+      "justification": "Reasonable limit for personal banking, prevents data entry errors, aligns with edge case testing in story analysis.",
+      "basis": "Edge case from story analysis - 'Very large transaction amount' suggests need for upper bound"
+    },
+    {
+      "question": "How should the system handle decimal precision for amounts (2 decimal places, more)?",
+      "answer": "2 decimal places using DECIMAL(19, 2)",
+      "justification": "Standard precision for USD currency, sufficient range for typical transactions up to $1,000,000.",
+      "basis": "app/docs/ARCHITECTURE_DATABASE.md - established schema design with DECIMAL(19, 2)"
+    },
+    {
+      "question": "What date format should be used for display (MM/DD/YYYY, DD/MM/YYYY, ISO)?",
+      "answer": "en-US locale with Intl.DateTimeFormat (displays as 'MMM DD, YYYY')",
+      "justification": "Standard JavaScript internationalization API, consistent with architecture examples, user-friendly format.",
+      "basis": "app/docs/ARCHITECTURE_UI.md - example formatting code uses Intl.DateTimeFormat"
+    },
+    {
+      "question": "Should the mock data generation utility be part of the application or separate tool?",
+      "answer": "Separate seeding script in app/src/db",
+      "justification": "Separates test data generation from application code, enables easy database reset for development/testing, follows best practices for development tooling.",
+      "basis": "Best practice for development tooling - seed scripts should be separate from application runtime"
+    },
+    {
+      "question": "What is the maximum length for payee name?",
+      "answer": "500 characters",
+      "justification": "Sufficient for any reasonable payee name including special characters, prevents abuse, aligns with edge case testing.",
+      "basis": "Edge case from story analysis - 'Very long payee name (500+ characters)' suggests 500 as reasonable limit"
+    },
+    {
+      "question": "Should transactions be sorted by date ascending or descending by default?",
+      "answer": "Descending (most recent first)",
+      "justification": "Users typically want to see most recent transactions first, aligns with common banking app UX patterns.",
+      "basis": "app/docs/ARCHITECTURE_DATABASE.md - example queries show 'ORDER BY transaction_date DESC'"
+    },
+    {
+      "question": "What happens when a transaction would result in negative balance? Hard reject or allow with warning?",
+      "answer": "Hard reject with 'Insufficient funds' error",
+      "justification": "Prevents overdraft, enforces business rule at API level, clear error message to user.",
+      "basis": "Story acceptance criteria - 'Cannot create transactions for more money than available' with error message"
+    },
+    {
+      "question": "Should the system support multiple currencies or single currency only?",
+      "answer": "Single currency (USD) only",
+      "justification": "Simplifies implementation, sufficient for benchmark purposes, no multi-currency requirement in story.",
+      "basis": "Story constraint - 'Single currency only (USD implied)' from analysis"
+    },
+    {
+      "question": "How should the Python analytics sidecar integrate with the main application?",
+      "answer": "Deferred to future story - reads from shared database",
+      "justification": "Core transaction management is foundational, analytics is secondary. Sidecar will read from shared database, integration points TBD.",
+      "basis": "Story analysis recommendation - defer analytics sidecar integration until core app is functional"
+    },
+    {
+      "question": "What analytics capabilities are needed from the Python sidecar in the core app?",
+      "answer": "Deferred to future story",
+      "justification": "Core app focuses on transaction display and management. Analytics capabilities will be defined in separate story.",
+      "basis": "Story analysis - analytics is out of scope for core app, future enhancement"
+    }
+  ]
+}

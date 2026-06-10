@@ -1,0 +1,108 @@
+{
+  "source_story": "app/docs/reqs/core/display-and-manage-transactions.analysis.json",
+  "overall_design": "app/docs/reqs/core/display-and-manage-transactions.design.json",
+  "story": {
+    "so_that": "I can track my financial activity and maintain an accurate account balance",
+    "as_a": "Bank account holder",
+    "i_want": "view my transactions, add new transactions, and see my current balance in a secure banking application"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "Display existing transactions for logged-in account",
+      "gherkin": "Given a user is logged in When they view the transaction list Then they see all transactions impacting their account sorted by date descending",
+      "status": "pending"
+    },
+    {
+      "criterion": "Add new transactions to existing accounts",
+      "gherkin": "Given a user is logged in When they submit a new transaction with valid date, payee, and amount Then the transaction is recorded and balance is updated immediately",
+      "status": "pending"
+    },
+    {
+      "criterion": "Show only transactions that impact the current user's account",
+      "gherkin": "Given multiple accounts exist in the system When a user logs in Then they see only transactions where their account is involved",
+      "status": "pending"
+    },
+    {
+      "criterion": "Maintain accurate running balance",
+      "gherkin": "Given transactions are displayed When a user views the balance Then it reflects the sum of all transactions for their account",
+      "status": "pending"
+    },
+    {
+      "criterion": "Cannot create transactions for more money than available",
+      "gherkin": "Given an account has a balance of $100 When a user attempts to add a transaction of -$150 Then the transaction is rejected with error 'Insufficient funds'",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Zero amount transaction",
+      "gherkin": "Given a user is adding a transaction When they enter amount as 0 Then the transaction is rejected with error 'Amount must be non-zero'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account with exactly zero balance",
+      "gherkin": "Given an account has zero balance When a user attempts to add a negative transaction Then the transaction is rejected with error 'Insufficient funds'",
+      "status": "pending"
+    },
+    {
+      "criterion": "Invalid account credentials",
+      "gherkin": "Given a user enters incorrect password When they attempt to login Then error message 'Invalid credentials' is displayed",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    "app/docs/reqs/core/streams/01-foundations.stream.json"
+  ],
+  "steps": [
+    {
+      "description": "Implement JWT token generation, validation, and bearer token middleware",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Implement POST /api/auth/login endpoint with credential validation and token generation",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement JWT token generation, validation, and bearer token middleware"]
+    },
+    {
+      "description": "Implement repository pattern for transaction data access",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Implement business logic validation for transaction creation",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement repository pattern for transaction data access"]
+    },
+    {
+      "description": "Implement GET and POST endpoints for transaction retrieval and creation",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement JWT token generation, validation, and bearer token middleware", "Implement business logic validation for transaction creation"]
+    },
+    {
+      "description": "Implement comprehensive unit tests for authentication and transaction logic",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement GET and POST endpoints for transaction retrieval and creation"]
+    },
+    {
+      "description": "Implement integration tests for endpoint behavior and database interactions",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement comprehensive unit tests for authentication and transaction logic"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/ARCHITECTURE_BACKEND.md",
+      "app/docs/reqs/core/display-and-manage-transactions.design.json",
+      "app/docs/reqs/core/display-and-manage-transactions.analysis.json"
+    ],
+    "code": []
+  }
+}
