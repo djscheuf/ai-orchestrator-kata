@@ -32,7 +32,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Id).IsRequired();
             entity.Property(e => e.SourceAccountId).IsRequired();
             entity.Property(e => e.TargetAccountId).IsRequired();
-            entity.Property(e => e.Amount).IsRequired();
+            entity.Property(e => e.Amount).IsRequired().HasPrecision(19, 2);
             entity.Property(e => e.TransactionDate).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
         });

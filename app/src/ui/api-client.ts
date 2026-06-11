@@ -137,7 +137,8 @@ class ApiClient {
       headers: this.getHeaders(true),
     });
 
-    return this.handleResponse<Transaction[]>(response);
+    const data = await this.handleResponse<{ transactions: Transaction[]; balance: number }>(response);
+    return data.transactions;
   }
 
   /**
