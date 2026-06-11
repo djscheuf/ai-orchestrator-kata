@@ -14,7 +14,24 @@ import {
   ApiError,
 } from './types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+let API_BASE_URL = 'http://localhost:5000/api';
+
+// Load API base URL from config file
+async function loadConfig() {
+  try {
+    const response = await fetch('/config.json');
+    if (response.ok) {
+      const config = await response.json();
+      if (config.apiBaseUrl) {
+        API_BASE_URL = `${config.apiBaseUrl}/api`;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load config.json, using default API URL', error);
+  }
+}
+
+loadConfig();
 
 /**
  * Configuration for API client.

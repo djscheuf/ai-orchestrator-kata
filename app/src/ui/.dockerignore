@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+README.md
+.env.example
+__tests__
+jest.config.js
+jest.setup.ts
+tsconfig.json
+vite.config.ts
+test_api_client.py
+.DS_Store
