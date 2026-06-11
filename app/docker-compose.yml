@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  db:
+    build:
+      context: ..
+      dockerfile: app/src/db/Dockerfile
+    container_name: financial-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-financial_app}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - financial-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: ..
+      dockerfile: app/src/api/Dockerfile
+    container_name: financial-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${API_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:${API_PORT:-5000}
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${DB_NAME:-financial_app};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres};"
+    ports:
+      - "${API_PORT:-5000}:${API_PORT:-5000}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - financial-network
+
+  ui:
+    build:
+      context: ..
+      dockerfile: app/src/ui/Dockerfile
+    container_name: financial-ui
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://api:5000}
+    ports:
+      - "${UI_PORT:-3000}:3000"
+    depends_on:
+      - api
+    networks:
+      - financial-network
+
+networks:
+  financial-network:
+    driver: bridge
