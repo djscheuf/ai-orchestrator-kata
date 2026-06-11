@@ -1,2 +1,4 @@
-.windsurf
-.claude
+**/.windsurf/*
+**/.claude/*
+**/node_modules/*
+**/.vscode/*
