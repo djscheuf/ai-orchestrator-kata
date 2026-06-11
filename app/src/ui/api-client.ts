@@ -131,8 +131,8 @@ class ApiClient {
    * Get all transactions for the authenticated account.
    * Requires valid authentication token.
    */
-  async getTransactions(): Promise<Transaction[]> {
-    const response = await fetch(`${API_BASE_URL}/transactions`, {
+  async getTransactions(accountId: string): Promise<Transaction[]> {
+    const response = await fetch(`${API_BASE_URL}/accounts/${accountId}/transactions`, {
       method: 'GET',
       headers: this.getHeaders(true),
     });
@@ -145,9 +145,10 @@ class ApiClient {
    * Requires valid authentication token.
    */
   async createTransaction(
+    accountId: string,
     request: CreateTransactionRequest
   ): Promise<Transaction> {
-    const response = await fetch(`${API_BASE_URL}/transactions`, {
+    const response = await fetch(`${API_BASE_URL}/accounts/${accountId}/transactions`, {
       method: 'POST',
       headers: this.getHeaders(true),
       body: JSON.stringify(request),
@@ -160,8 +161,8 @@ class ApiClient {
    * Get current balance for the authenticated account.
    * Requires valid authentication token.
    */
-  async getBalance(): Promise<Balance> {
-    const response = await fetch(`${API_BASE_URL}/accounts/balance`, {
+  async getBalance(accountId: string): Promise<Balance> {
+    const response = await fetch(`${API_BASE_URL}/accounts/${accountId}/balance`, {
       method: 'GET',
       headers: this.getHeaders(true),
     });

@@ -45,7 +45,10 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({
   const refreshTransactions = async (): Promise<void> => {
     try {
       setError(null);
-      const fetchedTransactions = await apiClient.getTransactions();
+      if (!auth.accountId) {
+        throw new Error('Account ID not available');
+      }
+      const fetchedTransactions = await apiClient.getTransactions(auth.accountId);
       setTransactions(fetchedTransactions);
       setBalance(calculateBalance(fetchedTransactions));
     } catch (err: any) {
@@ -67,7 +70,10 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({
   ): Promise<void> => {
     try {
       setError(null);
-      await apiClient.createTransaction(request);
+      if (!auth.accountId) {
+        throw new Error('Account ID not available');
+      }
+      await apiClient.createTransaction(auth.accountId, request);
       await refreshTransactions();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to create transaction';
