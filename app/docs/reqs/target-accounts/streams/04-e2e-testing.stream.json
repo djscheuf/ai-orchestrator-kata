@@ -1,0 +1,108 @@
+{
+  "source_story": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "overall_design": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "story": {
+    "so_that": "I can select a target account from a list instead of typing a UUID",
+    "as_a": "Bank account holder",
+    "i_want": "see a dropdown of available accounts when filling out a transaction form"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "Dropdown displays available accounts on form load",
+      "gherkin": "Given a user opens the transaction form When the form mounts Then a dropdown shows all available accounts with their names",
+      "status": "pending"
+    },
+    {
+      "criterion": "User can select an account from dropdown",
+      "gherkin": "Given the dropdown is populated with accounts When a user selects an account Then the form state is updated with the selected account UUID",
+      "status": "pending"
+    },
+    {
+      "criterion": "Form submission works with dropdown selection",
+      "gherkin": "Given a user selects an account from dropdown When they submit the form Then the transaction is created with the correct target account UUID",
+      "status": "pending"
+    },
+    {
+      "criterion": "Error state shown if accounts fetch fails",
+      "gherkin": "Given the accounts fetch fails When the form is displayed Then an error message is shown and form submission is disabled",
+      "status": "pending"
+    },
+    {
+      "criterion": "Empty state shown if no accounts available",
+      "gherkin": "Given no accounts are available When the form is displayed Then a message 'No accounts available' is shown and form submission is disabled",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Network error while fetching accounts",
+      "gherkin": "Given a network error occurs When fetching accounts Then error message is displayed and user can retry",
+      "status": "pending"
+    },
+    {
+      "criterion": "Empty accounts list from backend",
+      "gherkin": "Given the backend returns empty accounts array When the form is displayed Then empty state is shown",
+      "status": "pending"
+    },
+    {
+      "criterion": "Very large accounts list (>100 accounts)",
+      "gherkin": "Given the system has 100+ accounts When the form is displayed Then all accounts are shown (no pagination for MVP)",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    "app/docs/reqs/target-accounts/streams/01-foundations.stream.json",
+    "app/docs/reqs/target-accounts/streams/02-backend-api.stream.json",
+    "app/docs/reqs/target-accounts/streams/03-frontend-ui.stream.json"
+  ],
+  "steps": [
+    {
+      "description": "Write end-to-end test: User opens transaction form and sees accounts dropdown populated",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Write end-to-end test: User selects account from dropdown and submits form",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Write end-to-end test: User opens transaction form and sees accounts dropdown populated"]
+    },
+    {
+      "description": "Write end-to-end test: Transaction is created with correct target account UUID",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Write end-to-end test: User selects account from dropdown and submits form"]
+    },
+    {
+      "description": "Write end-to-end test: User sees error message when accounts fetch fails",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Write end-to-end test: User sees empty state when no accounts available",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Write end-to-end test: User can retry accounts fetch after network error",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Write end-to-end test: User sees error message when accounts fetch fails"]
+    },
+    {
+      "description": "Execute all end-to-end tests and verify passing",
+      "layer": "testing",
+      "status": "pending",
+      "depends_on": ["Write end-to-end test: User opens transaction form and sees accounts dropdown populated", "Write end-to-end test: User selects account from dropdown and submits form", "Write end-to-end test: Transaction is created with correct target account UUID", "Write end-to-end test: User sees error message when accounts fetch fails", "Write end-to-end test: User sees empty state when no accounts available", "Write end-to-end test: User can retry accounts fetch after network error"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json"
+    ],
+    "code": []
+  }
+}

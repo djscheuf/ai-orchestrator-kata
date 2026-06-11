@@ -1,0 +1,177 @@
+{
+  "story_id": "update-transaction-form-with-account-dropdown",
+  "analysis_date": "2026-06-11",
+  "capability_analysis": {
+    "core_action": "Replace the text input field for target account with a dropdown select component",
+    "inputs_required": [
+      "List of available accounts for the current user",
+      "Account metadata (id, name/display label)"
+    ],
+    "outputs_expected": [
+      "Dropdown component rendered in place of text input",
+      "Selected account UUID stored in form state",
+      "Form submission includes selected account UUID"
+    ],
+    "state_changes": [
+      "targetAccountId state updated when dropdown selection changes",
+      "Form validation passes when account is selected"
+    ],
+    "side_effects": [
+      "Form validation logic may need adjustment for dropdown vs text input"
+    ],
+    "affected_components": [
+      "TransactionForm component (app/src/ui/components/TransactionForm.tsx)",
+      "TransactionForm tests (app/src/ui/__tests__/TransactionForm.test.tsx)",
+      "Potentially TransactionContext for fetching available accounts"
+    ]
+  },
+  "acceptance_criteria_analysis": [
+    {
+      "criteria": "Target account field displays as a dropdown with all known accounts listed",
+      "gherkin": "Given a user is on the transaction form, When they click the target account field, Then a dropdown list of available accounts is displayed",
+      "type": "functional",
+      "testable": true,
+      "dependencies": ["Must have list of available accounts loaded"],
+      "notes": "Need to fetch accounts from API or context"
+    },
+    {
+      "criteria": "Dropdown shows account identifiers in a user-friendly format (not raw UUID)",
+      "gherkin": "Given the dropdown is open, When accounts are displayed, Then each account shows a readable identifier (e.g., account name or formatted display)",
+      "type": "functional",
+      "testable": true,
+      "dependencies": ["Account data must include display name or label"],
+      "notes": "Need to determine account display format (name, account number, etc.)"
+    },
+    {
+      "criteria": "Selecting an account from the dropdown populates the form field with the correct account UUID",
+      "gherkin": "Given a user selects an account from the dropdown, When the selection is made, Then the form field is populated with the account's UUID",
+      "type": "functional",
+      "testable": true,
+      "dependencies": ["None"],
+      "notes": "Verify that targetAccountId state is updated with UUID, not display name"
+    },
+    {
+      "criteria": "The dropdown is populated with all accounts available to the current user",
+      "gherkin": "Given a user opens the transaction form, When the dropdown is rendered, Then it contains all accounts the user has access to",
+      "type": "business rule",
+      "testable": true,
+      "dependencies": ["Must have access to user's account list", "Must filter by user permissions"],
+      "notes": "Need to determine source of account list (API endpoint, context, props)"
+    }
+  ],
+  "edge_cases": [
+    {
+      "category": "INPUT_EDGE_CASES",
+      "case": "No accounts available",
+      "scenario": "User has no accounts to select from",
+      "acceptance_criteria": "Dropdown displays empty state or disabled with message 'No accounts available'",
+      "impact": "User experience, form usability"
+    },
+    {
+      "category": "INPUT_EDGE_CASES",
+      "case": "Single account available",
+      "scenario": "User has only one account",
+      "acceptance_criteria": "Dropdown displays single account and can be selected",
+      "impact": "User experience"
+    },
+    {
+      "category": "INPUT_EDGE_CASES",
+      "case": "Many accounts (>100)",
+      "scenario": "User has large number of accounts",
+      "acceptance_criteria": "Dropdown remains usable (may need search/filter)",
+      "impact": "Performance, user experience"
+    },
+    {
+      "category": "STATE_EDGE_CASES",
+      "case": "Accounts list loading",
+      "scenario": "Dropdown is rendering while accounts are being fetched",
+      "acceptance_criteria": "Show loading state or skeleton in dropdown",
+      "impact": "User experience"
+    },
+    {
+      "category": "STATE_EDGE_CASES",
+      "case": "Account list fetch fails",
+      "scenario": "API call to fetch accounts fails",
+      "acceptance_criteria": "Show error message and allow user to retry or fallback to text input",
+      "impact": "Reliability, user experience"
+    },
+    {
+      "category": "USER_EDGE_CASES",
+      "case": "User permissions change",
+      "scenario": "User's account access changes between page load and form submission",
+      "acceptance_criteria": "Form validation catches invalid account selection",
+      "impact": "Security, data integrity"
+    },
+    {
+      "category": "SYSTEM_EDGE_CASES",
+      "case": "Network timeout fetching accounts",
+      "scenario": "Account list request times out",
+      "acceptance_criteria": "Graceful error handling with retry option",
+      "impact": "Reliability"
+    }
+  ],
+  "dependencies": {
+    "technical_dependencies": {
+      "existing_code": [
+        "TransactionForm component - needs modification to use dropdown",
+        "TransactionContext - may need to provide account list",
+        "AuthContext - may provide current user context",
+        "types.ts - may need new Account interface"
+      ],
+      "new_code": [
+        "Account fetching logic (if not already available)",
+        "Dropdown component or use existing UI library component",
+        "Account list loading/error states"
+      ],
+      "infrastructure": [
+        "API endpoint to fetch user's available accounts"
+      ]
+    },
+    "story_dependencies": {
+      "blocked_by": [
+        "Must have API endpoint for fetching user's accounts"
+      ],
+      "blocks": [],
+      "related": [
+        "Any other features using account selection"
+      ]
+    },
+    "knowledge_dependencies": {
+      "domain_knowledge": [
+        "How accounts are structured in the system",
+        "What account metadata is available for display"
+      ],
+      "technical_knowledge": [
+        "React hooks and state management",
+        "Form handling patterns in the codebase"
+      ]
+    }
+  },
+  "open_questions": [
+    {
+      "question": "Should the dropdown support search/filter for users with many accounts?",
+      "impacts": ["User experience", "Component complexity"],
+      "priority": "Medium"
+    },
+    {
+      "question": "How should we handle the case where the account list fails to load?",
+      "impacts": ["Error handling", "User experience"],
+      "priority": "Medium"
+    },
+    {
+      "question": "Should we pre-select the user's primary/current account as default?",
+      "impacts": ["User experience", "Form behavior"],
+      "priority": "Low"
+    }
+  ],
+  "resolved_questions": [
+    {
+      "question": "What is the source of the account list?",
+      "resolution": "A new API endpoint will be created to fetch all accounts in the system. This endpoint will be called when the TransactionForm component mounts."
+    },
+    {
+      "question": "What should be displayed in the dropdown for each account?",
+      "resolution": "Display the account name only. The UUID will be hidden from the user but stored internally for form submission."
+    }
+  ]
+}

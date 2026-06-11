@@ -1,0 +1,85 @@
+{
+  "source_story": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "overall_design": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "story": {
+    "so_that": "I can select a target account from a list instead of typing a UUID",
+    "as_a": "Bank account holder",
+    "i_want": "see a dropdown of available accounts when filling out a transaction form"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "Dropdown displays available accounts on form load",
+      "gherkin": "Given a user opens the transaction form When the form mounts Then a dropdown shows all available accounts with their names",
+      "status": "pending"
+    },
+    {
+      "criterion": "Form submission works with dropdown selection",
+      "gherkin": "Given a user selects an account from dropdown When they submit the form Then the transaction is created with the correct target account UUID",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Network error while fetching accounts",
+      "gherkin": "Given a network error occurs When fetching accounts Then error message is displayed and user can retry",
+      "status": "pending"
+    },
+    {
+      "criterion": "Unauthorized access to accounts endpoint",
+      "gherkin": "Given a user is not authenticated When they attempt to fetch accounts Then 401 error is returned",
+      "status": "pending"
+    },
+    {
+      "criterion": "Database unavailable when fetching accounts",
+      "gherkin": "Given the database is unavailable When accounts are requested Then 500 error is returned with graceful error message",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    "app/docs/reqs/target-accounts/streams/01-foundations.stream.json"
+  ],
+  "steps": [
+    {
+      "description": "Implement GET /api/accounts endpoint in AccountsController to return list of accounts with ID and name",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Add authorization check to GET /api/accounts endpoint to ensure only authenticated users can access",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement GET /api/accounts endpoint in AccountsController to return list of accounts with ID and name"]
+    },
+    {
+      "description": "Add error handling to GET /api/accounts endpoint for database failures and timeout scenarios",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement GET /api/accounts endpoint in AccountsController to return list of accounts with ID and name"]
+    },
+    {
+      "description": "Write unit tests for GET /api/accounts endpoint (authorization, response format, error handling)",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement GET /api/accounts endpoint in AccountsController to return list of accounts with ID and name", "Add authorization check to GET /api/accounts endpoint to ensure only authenticated users can access", "Add error handling to GET /api/accounts endpoint for database failures and timeout scenarios"]
+    },
+    {
+      "description": "Write integration tests for accounts fetch with authorization and error scenarios",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Write unit tests for GET /api/accounts endpoint (authorization, response format, error handling)"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/ARCHITECTURE_BACKEND.md",
+      "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json"
+    ],
+    "code": [
+      "app/src/api/Controllers/AccountsController.cs",
+      "app/src/api/Controllers/TransactionsController.cs",
+      "app/src/api/Middleware/JwtMiddleware.cs",
+      "app/src/api/Repositories/IAccountRepository.cs"
+    ]
+  }
+}

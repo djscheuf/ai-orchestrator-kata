@@ -1,0 +1,300 @@
+{
+  "source_story": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "overall_design": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "story": {
+    "so_that": "I can select a target account from a list instead of typing a UUID",
+    "as_a": "Bank account holder",
+    "i_want": "see a dropdown of available accounts when filling out a transaction form"
+  },
+  "acceptance_criteria": [
+    {
+      "criterion": "Dropdown displays available accounts on form load",
+      "gherkin": "Given a user opens the transaction form When the form mounts Then a dropdown shows all available accounts with their names",
+      "status": "pending"
+    },
+    {
+      "criterion": "Dropdown shows account names, not UUIDs",
+      "gherkin": "Given the accounts dropdown is displayed When a user views the dropdown options Then they see account names like 'Alice Account' not UUID strings",
+      "status": "pending"
+    },
+    {
+      "criterion": "User can select an account from dropdown",
+      "gherkin": "Given the dropdown is populated with accounts When a user selects an account Then the form state is updated with the selected account UUID",
+      "status": "pending"
+    },
+    {
+      "criterion": "Form submission works with dropdown selection",
+      "gherkin": "Given a user selects an account from dropdown When they submit the form Then the transaction is created with the correct target account UUID",
+      "status": "pending"
+    },
+    {
+      "criterion": "Loading state shown while fetching accounts",
+      "gherkin": "Given the form is mounting When accounts are being fetched Then a loading indicator is displayed",
+      "status": "pending"
+    },
+    {
+      "criterion": "Error state shown if accounts fetch fails",
+      "gherkin": "Given the accounts fetch fails When the form is displayed Then an error message is shown and form submission is disabled",
+      "status": "pending"
+    },
+    {
+      "criterion": "Empty state shown if no accounts available",
+      "gherkin": "Given no accounts are available When the form is displayed Then a message 'No accounts available' is shown and form submission is disabled",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account selection is required for form submission",
+      "gherkin": "Given the form is displayed When a user attempts to submit without selecting an account Then the form validation prevents submission with error message",
+      "status": "pending"
+    }
+  ],
+  "edge_cases": [
+    {
+      "criterion": "Network error while fetching accounts",
+      "gherkin": "Given a network error occurs When fetching accounts Then error message is displayed and user can retry",
+      "status": "pending"
+    },
+    {
+      "criterion": "Empty accounts list from backend",
+      "gherkin": "Given the backend returns empty accounts array When the form is displayed Then empty state is shown",
+      "status": "pending"
+    },
+    {
+      "criterion": "Very large accounts list (>100 accounts)",
+      "gherkin": "Given the system has 100+ accounts When the form is displayed Then all accounts are shown (no pagination for MVP)",
+      "status": "pending"
+    },
+    {
+      "criterion": "User's own account in dropdown",
+      "gherkin": "Given a user opens the form When viewing the dropdown Then their own account is included in the list",
+      "status": "pending"
+    },
+    {
+      "criterion": "Accounts fetch timeout",
+      "gherkin": "Given the accounts fetch takes too long When the timeout is reached Then error message is displayed",
+      "status": "pending"
+    },
+    {
+      "criterion": "Unauthorized access to accounts endpoint",
+      "gherkin": "Given a user is not authenticated When they attempt to fetch accounts Then 401 error is returned",
+      "status": "pending"
+    },
+    {
+      "criterion": "Database unavailable when fetching accounts",
+      "gherkin": "Given the database is unavailable When accounts are requested Then 500 error is returned with graceful error message",
+      "status": "pending"
+    }
+  ],
+  "impacted_layers": {
+    "database": [
+      "Account table (existing, no schema changes)"
+    ],
+    "api": [
+      "New GET /api/accounts endpoint",
+      "AccountsController",
+      "Authorization middleware"
+    ],
+    "ui": [
+      "TransactionForm component",
+      "Account dropdown component",
+      "Form state management"
+    ]
+  },
+  "steps": [
+    {
+      "description": "Create GET /api/accounts endpoint in AccountsController to return list of accounts with ID and name",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Create AccountListDto with Id and Name fields for API response",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Add authorization check to GET /api/accounts endpoint to ensure only authenticated users can access",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Add error handling to GET /api/accounts endpoint for database failures",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement useEffect hook in TransactionForm to fetch accounts on component mount",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Create dropdown component to display fetched accounts with account names",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement loading state UI while accounts are being fetched",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement error state UI for failed accounts fetch with error message",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Implement empty state UI when no accounts are available",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Update form state management to handle account selection from dropdown",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Update form validation to ensure account is selected before submission",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Write unit tests for GET /api/accounts endpoint",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Write unit tests for TransactionForm dropdown component",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Write integration tests for accounts fetch and form submission flow",
+      "layer": "ui",
+      "status": "pending"
+    },
+    {
+      "description": "Write end-to-end tests for complete user workflow of selecting account and submitting transaction",
+      "layer": "testing",
+      "status": "pending"
+    }
+  ],
+  "testing_strategy": {
+    "unit_tests": [
+      {
+        "description": "GET /api/accounts returns all accounts with correct DTO format",
+        "layer": "api"
+      },
+      {
+        "description": "GET /api/accounts requires authorization header",
+        "layer": "api"
+      },
+      {
+        "description": "GET /api/accounts returns 500 on database error",
+        "layer": "api"
+      },
+      {
+        "description": "Dropdown component renders with fetched accounts",
+        "layer": "ui"
+      },
+      {
+        "description": "Dropdown displays account names not UUIDs",
+        "layer": "ui"
+      },
+      {
+        "description": "Selecting account updates form state with UUID",
+        "layer": "ui"
+      },
+      {
+        "description": "Loading state displays while fetching accounts",
+        "layer": "ui"
+      },
+      {
+        "description": "Error state displays on fetch failure",
+        "layer": "ui"
+      },
+      {
+        "description": "Empty state displays when no accounts available",
+        "layer": "ui"
+      },
+      {
+        "description": "Form validation passes when account is selected",
+        "layer": "ui"
+      },
+      {
+        "description": "Form validation fails when no account is selected",
+        "layer": "ui"
+      }
+    ],
+    "integration_tests": [
+      {
+        "description": "Accounts fetch on component mount with authorization",
+        "layer": "ui"
+      },
+      {
+        "description": "Form submission with selected account from dropdown",
+        "layer": "ui"
+      },
+      {
+        "description": "Error handling when accounts endpoint returns 401",
+        "layer": "ui"
+      },
+      {
+        "description": "Error handling when accounts endpoint returns 500",
+        "layer": "ui"
+      }
+    ],
+    "e2e_tests": [
+      {
+        "description": "User opens transaction form and sees accounts dropdown populated",
+        "layer": "testing"
+      },
+      {
+        "description": "User selects account from dropdown and submits form",
+        "layer": "testing"
+      },
+      {
+        "description": "Transaction is created with correct target account UUID",
+        "layer": "testing"
+      },
+      {
+        "description": "User sees error message when accounts fetch fails",
+        "layer": "testing"
+      },
+      {
+        "description": "User sees empty state when no accounts available",
+        "layer": "testing"
+      }
+    ]
+  },
+  "risks_and_mitigations": [
+    {
+      "risk": "Accounts list could be very large (>1000 accounts) causing performance issues",
+      "mitigation": "For MVP, assume reasonable account count (<100). Add pagination or search in future iteration if needed. Monitor performance with real data.",
+      "layer": "api"
+    },
+    {
+      "risk": "Network latency could cause poor UX while fetching accounts",
+      "mitigation": "Implement clear loading state, add timeout handling, consider caching accounts on frontend in future iteration",
+      "layer": "ui"
+    },
+    {
+      "risk": "Authorization bypass if endpoint check is missed",
+      "mitigation": "Ensure authorization middleware is applied to GET /api/accounts endpoint, add security-focused unit tests",
+      "layer": "api"
+    },
+    {
+      "risk": "Form submission could fail if selected account becomes invalid between fetch and submission",
+      "mitigation": "Backend already validates target account exists before transaction creation, so invalid selection will be caught and rejected",
+      "layer": "api"
+    },
+    {
+      "risk": "Stale accounts list if accounts are added/removed while user has form open",
+      "mitigation": "For MVP, accept stale data. User can refresh form to get latest accounts. Add real-time updates in future if needed.",
+      "layer": "ui"
+    },
+    {
+      "risk": "Dropdown component accessibility issues",
+      "mitigation": "Use accessible React select component with proper ARIA labels, test with keyboard navigation",
+      "layer": "ui"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "story_id": "update-transaction-form-with-account-dropdown",
+  "raw_request": "Update the UI's transaction page so that the target account form item is a dropdown listing the known accounts, so users can fill out the form without having to type out a full UUID.",
+  "user_story": {
+    "role": "User",
+    "capability": "Select a target account from a dropdown list when filling out a transaction form",
+    "benefit": "Avoid having to type out a full UUID and reduce form entry errors"
+  },
+  "target_persona": {
+    "persona_name": "Transaction User",
+    "role": "End User / Account Holder",
+    "technical_level": "Intermediate",
+    "frequency_of_use": "Regular",
+    "environment": "Web Browser (Desktop/Mobile)",
+    "permissions": "Can create and manage transactions for their accounts",
+    "context": "User is filling out a transaction form and needs to specify a target account for the transaction"
+  },
+  "capability_breakdown": {
+    "core_action": "Select a target account from a dropdown instead of typing a UUID",
+    "inputs_required": [
+      "List of known/available accounts",
+      "Account identifiers (UUID, name, or display format)"
+    ],
+    "outputs_expected": [
+      "Selected account populated in the target account form field",
+      "Account UUID stored in the form submission"
+    ],
+    "state_changes": [
+      "Target account field value updated with selected account"
+    ],
+    "side_effects": [
+      "Form validation may trigger based on account selection"
+    ],
+    "affected_components": []
+  },
+  "acceptance_criteria": [
+    {
+      "criteria": "Target account field displays as a dropdown with all known accounts listed",
+      "gherkin": "Given a user is on the transaction form, When they click the target account field, Then a dropdown list of available accounts is displayed",
+      "type": "functional",
+      "jtbd": "Display available accounts in dropdown format",
+      "persona_served": "Transaction User"
+    },
+    {
+      "criteria": "Dropdown shows account identifiers in a user-friendly format (not raw UUID)",
+      "gherkin": "Given the dropdown is open, When accounts are displayed, Then each account shows a readable identifier (e.g., account name or formatted display)",
+      "type": "functional",
+      "jtbd": "Present accounts in readable format",
+      "persona_served": "Transaction User"
+    },
+    {
+      "criteria": "Selecting an account from the dropdown populates the form field with the correct account UUID",
+      "gherkin": "Given a user selects an account from the dropdown, When the selection is made, Then the form field is populated with the account's UUID",
+      "type": "functional",
+      "jtbd": "Store selected account UUID in form",
+      "persona_served": "Transaction User"
+    },
+    {
+      "criteria": "The dropdown is populated with all accounts available to the current user",
+      "gherkin": "Given a user opens the transaction form, When the dropdown is rendered, Then it contains all accounts the user has access to",
+      "type": "business rule",
+      "jtbd": "Load user's available accounts",
+      "persona_served": "Transaction User"
+    }
+  ]
+}

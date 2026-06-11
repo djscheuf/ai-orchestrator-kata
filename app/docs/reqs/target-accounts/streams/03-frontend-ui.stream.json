@@ -1,0 +1,148 @@
+{
+  "source_story": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "overall_design": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "story": {
+    "so_that": "I can select a target account from a list instead of typing a UUID",
+    "as_a": "Bank account holder",
+    "i_want": "see a dropdown of available accounts when filling out a transaction form"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "Dropdown displays available accounts on form load",
+      "gherkin": "Given a user opens the transaction form When the form mounts Then a dropdown shows all available accounts with their names",
+      "status": "pending"
+    },
+    {
+      "criterion": "Dropdown shows account names, not UUIDs",
+      "gherkin": "Given the accounts dropdown is displayed When a user views the dropdown options Then they see account names like 'Alice Account' not UUID strings",
+      "status": "pending"
+    },
+    {
+      "criterion": "User can select an account from dropdown",
+      "gherkin": "Given the dropdown is populated with accounts When a user selects an account Then the form state is updated with the selected account UUID",
+      "status": "pending"
+    },
+    {
+      "criterion": "Form submission works with dropdown selection",
+      "gherkin": "Given a user selects an account from dropdown When they submit the form Then the transaction is created with the correct target account UUID",
+      "status": "pending"
+    },
+    {
+      "criterion": "Loading state shown while fetching accounts",
+      "gherkin": "Given the form is mounting When accounts are being fetched Then a loading indicator is displayed",
+      "status": "pending"
+    },
+    {
+      "criterion": "Error state shown if accounts fetch fails",
+      "gherkin": "Given the accounts fetch fails When the form is displayed Then an error message is shown and form submission is disabled",
+      "status": "pending"
+    },
+    {
+      "criterion": "Empty state shown if no accounts available",
+      "gherkin": "Given no accounts are available When the form is displayed Then a message 'No accounts available' is shown and form submission is disabled",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account selection is required for form submission",
+      "gherkin": "Given the form is displayed When a user attempts to submit without selecting an account Then the form validation prevents submission with error message",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Network error while fetching accounts",
+      "gherkin": "Given a network error occurs When fetching accounts Then error message is displayed and user can retry",
+      "status": "pending"
+    },
+    {
+      "criterion": "Empty accounts list from backend",
+      "gherkin": "Given the backend returns empty accounts array When the form is displayed Then empty state is shown",
+      "status": "pending"
+    },
+    {
+      "criterion": "Very large accounts list (>100 accounts)",
+      "gherkin": "Given the system has 100+ accounts When the form is displayed Then all accounts are shown (no pagination for MVP)",
+      "status": "pending"
+    },
+    {
+      "criterion": "User's own account in dropdown",
+      "gherkin": "Given a user opens the form When viewing the dropdown Then their own account is included in the list",
+      "status": "pending"
+    },
+    {
+      "criterion": "Accounts fetch timeout",
+      "gherkin": "Given the accounts fetch takes too long When the timeout is reached Then error message is displayed",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    "app/docs/reqs/target-accounts/streams/01-foundations.stream.json",
+    "app/docs/reqs/target-accounts/streams/02-backend-api.stream.json"
+  ],
+  "steps": [
+    {
+      "description": "Implement useEffect hook in TransactionForm to fetch accounts on component mount",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Create dropdown component to display fetched accounts with account names",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement useEffect hook in TransactionForm to fetch accounts on component mount"]
+    },
+    {
+      "description": "Implement loading state UI while accounts are being fetched",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement useEffect hook in TransactionForm to fetch accounts on component mount"]
+    },
+    {
+      "description": "Implement error state UI for failed accounts fetch with error message",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement useEffect hook in TransactionForm to fetch accounts on component mount"]
+    },
+    {
+      "description": "Implement empty state UI when no accounts are available",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Implement useEffect hook in TransactionForm to fetch accounts on component mount"]
+    },
+    {
+      "description": "Update form state management to handle account selection from dropdown",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Create dropdown component to display fetched accounts with account names"]
+    },
+    {
+      "description": "Update form validation to ensure account is selected before submission",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Update form state management to handle account selection from dropdown"]
+    },
+    {
+      "description": "Write unit tests for TransactionForm dropdown component (rendering, selection, validation)",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Create dropdown component to display fetched accounts with account names", "Update form state management to handle account selection from dropdown", "Update form validation to ensure account is selected before submission"]
+    },
+    {
+      "description": "Write integration tests for accounts fetch and form submission flow",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Write unit tests for TransactionForm dropdown component (rendering, selection, validation)"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/ARCHITECTURE_TARGET.md",
+      "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json"
+    ],
+    "code": [
+      "app/src/analytics/TransactionForm.tsx",
+      "app/src/analytics/TransactionContext.tsx"
+    ]
+  }
+}

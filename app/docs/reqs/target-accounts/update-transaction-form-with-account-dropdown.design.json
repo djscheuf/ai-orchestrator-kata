@@ -1,0 +1,248 @@
+{
+  "story_id": "update-transaction-form-with-account-dropdown",
+  "design_date": "2026-06-11",
+  "user_flow": {
+    "current_reality": "User fills out transaction form by typing target account UUID manually",
+    "desired_state": "User selects target account from dropdown showing account names",
+    "domain_events": [
+      {
+        "event": "TransactionFormMounted",
+        "description": "User navigates to transaction form",
+        "state_change": "Frontend initiates fetch of available accounts"
+      },
+      {
+        "event": "AccountsListRequested",
+        "description": "Frontend requests all accounts from backend",
+        "state_change": "Backend returns list of accounts with ID and name"
+      },
+      {
+        "event": "AccountsListReceived",
+        "description": "Frontend receives accounts list",
+        "state_change": "Dropdown is populated with account names"
+      },
+      {
+        "event": "AccountSelected",
+        "description": "User selects an account from dropdown",
+        "state_change": "Form state updated with selected account UUID"
+      },
+      {
+        "event": "TransactionSubmitted",
+        "description": "User submits form with selected account",
+        "state_change": "Transaction created with target account UUID"
+      }
+    ]
+  },
+  "instrumentation_events": [
+    {
+      "event_name": "AccountsListFetched",
+      "description": "Triggered when accounts list is successfully fetched",
+      "data": {
+        "account_count": "number",
+        "fetch_duration_ms": "number"
+      }
+    },
+    {
+      "event_name": "AccountsListFetchFailed",
+      "description": "Triggered when accounts list fetch fails",
+      "data": {
+        "error_message": "string",
+        "error_code": "string"
+      }
+    },
+    {
+      "event_name": "AccountSelected",
+      "description": "Triggered when user selects an account from dropdown",
+      "data": {
+        "account_id": "string"
+      }
+    },
+    {
+      "event_name": "TransactionFormSubmitted",
+      "description": "Triggered when transaction form is submitted with dropdown selection",
+      "data": {
+        "target_account_id": "string"
+      }
+    }
+  ],
+  "layer_responsibilities": {
+    "frontend": [
+      "Display dropdown component with account names",
+      "Fetch accounts list on component mount",
+      "Handle loading and error states for accounts list",
+      "Update form state when account is selected",
+      "Validate that account is selected before form submission",
+      "Display account name in dropdown (hide UUID from user)"
+    ],
+    "backend": [
+      "Create new endpoint GET /api/accounts to return all accounts",
+      "Return account list with ID and name",
+      "Enforce authorization (only authenticated users can fetch accounts)",
+      "Handle errors gracefully (return 500 if database unavailable)",
+      "Validate that target account exists before transaction creation (existing logic)"
+    ],
+    "data_layer": [
+      "No schema changes needed (Account table already has Id and AccountName)",
+      "Existing GetAllAsync() method in IAccountRepository can be used"
+    ]
+  },
+  "contracts": {
+    "frontend_backend": {
+      "endpoint": "GET /api/accounts",
+      "description": "Fetch all accounts in the system",
+      "request": {
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {token}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "accounts": [
+            {
+              "id": "550e8400-e29b-41d4-a716-446655440001",
+              "name": "Alice Account"
+            },
+            {
+              "id": "550e8400-e29b-41d4-a716-446655440002",
+              "name": "Bob Account"
+            }
+          ]
+        }
+      },
+      "error_responses": [
+        {
+          "status": 401,
+          "body": {
+            "error": "Unauthorized"
+          }
+        },
+        {
+          "status": 500,
+          "body": {
+            "error": "Internal server error"
+          }
+        }
+      ]
+    },
+    "form_submission": {
+      "description": "Form submission remains unchanged, targetAccountId is UUID",
+      "request_body": {
+        "date": "string (YYYY-MM-DD)",
+        "amount": "number",
+        "targetAccountId": "string (UUID)"
+      }
+    }
+  },
+  "architectural_decisions": [
+    {
+      "decision": "Create new GET /api/accounts endpoint instead of using existing endpoints",
+      "rationale": "Provides a dedicated, simple endpoint for fetching all accounts. Follows REST conventions and CQRS pattern (read operation).",
+      "alternatives": [
+        "Extend existing AccountsController.GetBalance() - but this returns balance info, not list of accounts",
+        "Fetch accounts from TransactionsController - but this is for transaction operations, not account listing"
+      ],
+      "alignment": "Follows CQRS pattern and layered architecture documented in ARCHITECTURE_BACKEND.md"
+    },
+    {
+      "decision": "Return minimal account data (ID and name only) from endpoint",
+      "rationale": "Reduces payload size and provides exactly what frontend needs. Follows principle of least privilege.",
+      "alternatives": [
+        "Return full account object with all fields - unnecessary data transfer",
+        "Return only names without IDs - would require additional lookup on frontend"
+      ],
+      "alignment": "Follows DTO pattern and separation of concerns"
+    },
+    {
+      "decision": "Use React select/dropdown component in TransactionForm",
+      "rationale": "Improves UX by preventing UUID entry errors. Provides clear list of available options.",
+      "alternatives": [
+        "Keep text input with autocomplete - still requires typing",
+        "Use native HTML select - less flexible styling"
+      ],
+      "alignment": "Follows existing React patterns in codebase"
+    },
+    {
+      "decision": "Fetch accounts on component mount, not on form load",
+      "rationale": "Ensures accounts are fresh when user opens form. Simplifies state management.",
+      "alternatives": [
+        "Fetch accounts once on app startup - may become stale",
+        "Fetch accounts on dropdown open - adds latency to user interaction"
+      ],
+      "alignment": "Follows React best practices with useEffect"
+    }
+  ],
+  "ambiguities_and_assumptions": [
+    {
+      "question": "Should we cache the accounts list on the frontend?",
+      "assumption": "No caching initially. Fetch fresh list each time form mounts. This is simpler and ensures data freshness.",
+      "rationale": "Accounts list is unlikely to change frequently. If performance becomes an issue, caching can be added later.",
+      "basis": "Pragmatic approach for MVP. Can be optimized in future iterations."
+    },
+    {
+      "question": "What if accounts list is very large (>1000 accounts)?",
+      "assumption": "For now, assume reasonable account count (<100). If needed, add search/filter in future.",
+      "rationale": "Acceptance criteria don't specify handling for large lists. Current system has 5 seed accounts.",
+      "basis": "Pragmatic scope limitation. Can be addressed in separate story if needed."
+    },
+    {
+      "question": "Should we show the current user's own account in the dropdown?",
+      "assumption": "Yes, show all accounts including the user's own account. User may want to transfer between their own accounts.",
+      "rationale": "No business rule preventing self-transfers. Provides flexibility.",
+      "basis": "Existing transaction validation logic doesn't prevent self-transfers."
+    },
+    {
+      "question": "Should the dropdown be required or optional?",
+      "assumption": "Required. Existing form validation already requires targetAccountId.",
+      "rationale": "Matches current form behavior.",
+      "basis": "Existing TransactionForm validation (line 47-49 in TransactionForm.tsx)"
+    },
+    {
+      "question": "How should we handle the case where accounts list is empty?",
+      "assumption": "Show empty state message 'No accounts available'. Disable form submission.",
+      "rationale": "User cannot create transaction without target account.",
+      "basis": "Pragmatic UX approach."
+    }
+  ],
+  "implementation_scope": {
+    "frontend_changes": [
+      "Modify TransactionForm component to use dropdown instead of text input",
+      "Add useEffect hook to fetch accounts on mount",
+      "Add loading and error states for accounts fetch",
+      "Update form validation to work with dropdown selection",
+      "Update tests to cover dropdown behavior"
+    ],
+    "backend_changes": [
+      "Add new endpoint GET /api/accounts in AccountsController",
+      "Create AccountListDto with Id and Name fields",
+      "Add service method to fetch all accounts",
+      "Add authorization check to endpoint"
+    ],
+    "no_changes": [
+      "Database schema (Account table already has required fields)",
+      "Transaction creation logic (targetAccountId validation unchanged)",
+      "Form submission format (still sends UUID)"
+    ]
+  },
+  "testing_strategy": {
+    "frontend_unit_tests": [
+      "Dropdown renders with fetched accounts",
+      "Dropdown displays account names (not UUIDs)",
+      "Selecting account updates form state with UUID",
+      "Form validation passes when account selected",
+      "Loading state shows while fetching accounts",
+      "Error state shows if accounts fetch fails",
+      "Empty state shows if no accounts available"
+    ],
+    "backend_unit_tests": [
+      "GET /api/accounts returns all accounts",
+      "GET /api/accounts returns correct DTO format",
+      "GET /api/accounts requires authorization",
+      "GET /api/accounts handles database errors gracefully"
+    ],
+    "integration_tests": [
+      "User can select account from dropdown and submit form",
+      "Transaction is created with correct target account UUID"
+    ]
+  }
+}

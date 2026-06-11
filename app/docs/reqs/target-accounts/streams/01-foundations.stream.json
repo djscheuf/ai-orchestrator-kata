@@ -1,0 +1,71 @@
+{
+  "source_story": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "overall_design": "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json",
+  "story": {
+    "so_that": "I can select a target account from a list instead of typing a UUID",
+    "as_a": "Bank account holder",
+    "i_want": "see a dropdown of available accounts when filling out a transaction form"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "Dropdown displays available accounts on form load",
+      "gherkin": "Given a user opens the transaction form When the form mounts Then a dropdown shows all available accounts with their names",
+      "status": "pending"
+    },
+    {
+      "criterion": "Dropdown shows account names, not UUIDs",
+      "gherkin": "Given the accounts dropdown is displayed When a user views the dropdown options Then they see account names like 'Alice Account' not UUID strings",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Empty accounts list from backend",
+      "gherkin": "Given the backend returns empty accounts array When the form is displayed Then empty state is shown",
+      "status": "pending"
+    },
+    {
+      "criterion": "Unauthorized access to accounts endpoint",
+      "gherkin": "Given a user is not authenticated When they attempt to fetch accounts Then 401 error is returned",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [],
+  "steps": [
+    {
+      "description": "Define API contract for GET /api/accounts endpoint with request/response schemas",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Create AccountListDto with Id and Name fields",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Define API contract for GET /api/accounts endpoint with request/response schemas"]
+    },
+    {
+      "description": "Create GET /api/accounts endpoint stub that returns mock accounts data",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Create AccountListDto with Id and Name fields"]
+    },
+    {
+      "description": "Create API client method to call GET /api/accounts endpoint",
+      "layer": "ui",
+      "status": "pending",
+      "depends_on": ["Define API contract for GET /api/accounts endpoint with request/response schemas", "Create GET /api/accounts endpoint stub that returns mock accounts data"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/ARCHITECTURE_BACKEND.md",
+      "app/docs/ARCHITECTURE_TARGET.md",
+      "app/docs/reqs/target-accounts/update-transaction-form-with-account-dropdown.design.json"
+    ],
+    "code": [
+      "app/src/api/Controllers/AccountsController.cs",
+      "app/src/api/DTOs/TransactionListResponse.cs"
+    ]
+  }
+}
