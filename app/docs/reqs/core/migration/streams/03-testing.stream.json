@@ -1,0 +1,126 @@
+{
+  "source_story": "app/docs/reqs/core/migration/migrate-api-to-sql-db.analysis.json",
+  "overall_design": "app/docs/reqs/core/migration/migrate-api-to-sql-db.design.json",
+  "story": {
+    "as_a": "Backend Developer",
+    "i_want": "Update the current API implementation to utilize a real SQL database connection with connection string managed by configuration",
+    "so_that": "The application can persist data reliably across application restarts and support production-grade data storage instead of in-memory repositories"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "SQL repositories implement the same interfaces as in-memory repositories",
+      "gherkin": "Given the API is configured with a SQL database connection, When a transaction is created, Then it is persisted to the SQL database",
+      "status": "pending"
+    },
+    {
+      "criterion": "Database context is properly registered in dependency injection",
+      "gherkin": "Given the application is configured with DbContext, When repositories are instantiated, Then they receive a valid ApplicationDbContext instance",
+      "status": "pending"
+    },
+    {
+      "criterion": "Existing API endpoints continue to work with SQL-backed repositories",
+      "gherkin": "Given the API endpoints are unchanged, When requests are made to transaction and account endpoints, Then they retrieve/persist data from/to SQL database",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Database connection fails at startup",
+      "gherkin": "Given the database is unavailable, When the application starts, Then it fails with a meaningful error message",
+      "status": "pending"
+    },
+    {
+      "criterion": "Concurrent access to database from multiple application instances",
+      "gherkin": "Given multiple application instances access the same database, When transactions are created, Then data integrity is maintained",
+      "status": "pending"
+    },
+    {
+      "criterion": "Seed data already exists in database on application restart",
+      "gherkin": "Given seed data exists in the database, When the application restarts, Then no duplicate accounts are created",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    "app/docs/reqs/core/migration/streams/01-foundations.stream.json",
+    "app/docs/reqs/core/migration/streams/02-backend-api.stream.json"
+  ],
+  "steps": [
+    {
+      "description": "Write unit tests for ApplicationDbContext entity mappings and configuration",
+      "layer": "database",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Write unit tests for SqlTransactionRepository LINQ queries with in-memory database",
+      "layer": "database",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Write unit tests for SqlAccountRepository balance calculation from transactions",
+      "layer": "database",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Write integration tests for database connection and migration on startup",
+      "layer": "database",
+      "status": "pending",
+      "depends_on": ["Write unit tests for ApplicationDbContext entity mappings and configuration"]
+    },
+    {
+      "description": "Write integration tests for transaction creation end-to-end (API to database)",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Write unit tests for SqlTransactionRepository LINQ queries with in-memory database"]
+    },
+    {
+      "description": "Write integration tests for account balance calculation from SQL transactions",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Write unit tests for SqlAccountRepository balance calculation from transactions"]
+    },
+    {
+      "description": "Write integration tests for seed data initialization and idempotency",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Write integration tests for database connection error handling",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Write E2E tests for complete transaction workflow (create account, transaction, retrieve with balance)",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Write integration tests for transaction creation end-to-end (API to database)"]
+    },
+    {
+      "description": "Write E2E tests for data persistence across application restarts",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Write integration tests for seed data initialization and idempotency"]
+    },
+    {
+      "description": "Write E2E tests for concurrent transaction creation",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Write integration tests for transaction creation end-to-end (API to database)"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/reqs/core/migration/migrate-api-to-sql-db.design.json"
+    ],
+    "code": [
+      "app/src/api/Repositories/ITransactionRepository.cs",
+      "app/src/api/Repositories/IAccountRepository.cs",
+      "app/src/api/Models/Account.cs",
+      "app/src/api/Models/Transaction.cs"
+    ]
+  }
+}

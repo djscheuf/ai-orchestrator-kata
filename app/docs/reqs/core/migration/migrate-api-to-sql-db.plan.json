@@ -1,0 +1,215 @@
+{
+  "source_story": "app/docs/reqs/core/migration/migrate-api-to-sql-db.analysis.json",
+  "overall_design": "app/docs/reqs/core/migration/migrate-api-to-sql-db.design.json",
+  "story": {
+    "as_a": "Backend Developer",
+    "i_want": "Update the current API implementation to utilize a real SQL database connection with connection string managed by configuration",
+    "so_that": "The application can persist data reliably across application restarts and support production-grade data storage instead of in-memory repositories"
+  },
+  "acceptance_criteria": [
+    {
+      "criterion": "SQL repositories implement the same interfaces as in-memory repositories",
+      "gherkin": "Given the API is configured with a SQL database connection, When a transaction is created, Then it is persisted to the SQL database",
+      "status": "pending"
+    },
+    {
+      "criterion": "Connection string is read from appsettings.json configuration",
+      "gherkin": "Given appsettings.json contains a valid connection string, When the application starts, Then it connects to the specified SQL database",
+      "status": "pending"
+    },
+    {
+      "criterion": "Database context is properly registered in dependency injection",
+      "gherkin": "Given the application is configured with DbContext, When repositories are instantiated, Then they receive a valid ApplicationDbContext instance",
+      "status": "pending"
+    },
+    {
+      "criterion": "Existing API endpoints continue to work with SQL-backed repositories",
+      "gherkin": "Given the API endpoints are unchanged, When requests are made to transaction and account endpoints, Then they retrieve/persist data from/to SQL database",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account and transaction data models are properly mapped to database entities",
+      "gherkin": "Given the Account and Transaction domain models exist, When data is persisted to SQL, Then the schema correctly represents the domain model",
+      "status": "pending"
+    }
+  ],
+  "edge_cases": [
+    {
+      "criterion": "Database connection fails at startup",
+      "gherkin": "Given the database is unavailable, When the application starts, Then it fails with a meaningful error message",
+      "status": "pending"
+    },
+    {
+      "criterion": "Connection string is missing or invalid",
+      "gherkin": "Given appsettings.json has no connection string, When the application starts, Then it fails with a clear error",
+      "status": "pending"
+    },
+    {
+      "criterion": "Database schema does not exist",
+      "gherkin": "Given the database exists but tables do not, When the application starts, Then migrations create the required schema",
+      "status": "pending"
+    },
+    {
+      "criterion": "Concurrent access to database from multiple application instances",
+      "gherkin": "Given multiple application instances access the same database, When transactions are created, Then data integrity is maintained",
+      "status": "pending"
+    },
+    {
+      "criterion": "Seed data already exists in database on application restart",
+      "gherkin": "Given seed data exists in the database, When the application restarts, Then no duplicate accounts are created",
+      "status": "pending"
+    }
+  ],
+  "impacted_layers": {
+    "ui": [],
+    "api": [
+      "GET /api/transactions",
+      "POST /api/transactions",
+      "GET /api/accounts"
+    ],
+    "database": [
+      "Account table",
+      "Transaction table",
+      "Foreign key relationships"
+    ]
+  },
+  "steps": [
+    {
+      "description": "Configure ApplicationDbContext with Entity Framework Core - Define DbSet<Account> and DbSet<Transaction> properties, configure entity mappings using Fluent API in OnModelCreating",
+      "layer": "database",
+      "status": "pending"
+    },
+    {
+      "description": "Implement SqlTransactionRepository - Create class implementing ITransactionRepository with GetByAccountIdAsync, GetAllAsync, and CreateAsync using Entity Framework Core LINQ queries",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement SqlAccountRepository - Create class implementing IAccountRepository with GetByIdAsync, GetAllAsync, and GetBalanceAsync methods",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Register SQL repositories in dependency injection - Update Program.cs to register ApplicationDbContext with SQL Server provider and SQL repositories",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Update seed data initialization - Modify Program.cs to use SQL repositories for seed data with idempotency checks",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Configure environment-specific connection strings - Ensure appsettings.json and appsettings.Development.json contain proper SQL Server connection strings",
+      "layer": "api",
+      "status": "pending"
+    },
+    {
+      "description": "Implement database migrations - Set up Entity Framework Core migrations to automatically create/update database schema on startup",
+      "layer": "database",
+      "status": "pending"
+    },
+    {
+      "description": "Verify API endpoints work with SQL-backed repositories - Test GET/POST transactions and GET accounts endpoints with SQL backend",
+      "layer": "api",
+      "status": "pending"
+    }
+  ],
+  "testing_strategy": {
+    "unit_tests": [
+      {
+        "description": "Verify ApplicationDbContext entity mappings are configured correctly",
+        "layer": "database"
+      },
+      {
+        "description": "Test SqlTransactionRepository LINQ queries with in-memory database",
+        "layer": "database"
+      },
+      {
+        "description": "Test SqlAccountRepository balance calculation from transactions",
+        "layer": "database"
+      },
+      {
+        "description": "Verify Program.cs reads connection string from appsettings.json",
+        "layer": "api"
+      }
+    ],
+    "integration_tests": [
+      {
+        "description": "Verify ApplicationDbContext connects to SQL database and creates schema",
+        "layer": "database"
+      },
+      {
+        "description": "Create transaction via API, verify persisted to SQL database, retrieve via API",
+        "layer": "api"
+      },
+      {
+        "description": "Create multiple transactions, verify account balance calculated correctly from SQL",
+        "layer": "api"
+      },
+      {
+        "description": "Verify 5 test accounts created in SQL database on startup",
+        "layer": "api"
+      },
+      {
+        "description": "Restart application, verify no duplicate accounts created",
+        "layer": "api"
+      },
+      {
+        "description": "Verify meaningful error message when database is unavailable",
+        "layer": "api"
+      }
+    ],
+    "e2e_tests": [
+      {
+        "description": "Create account, create transaction, retrieve account with updated balance",
+        "layer": "api"
+      },
+      {
+        "description": "Create data, restart application, verify data still exists",
+        "layer": "api"
+      },
+      {
+        "description": "Create multiple transactions concurrently, verify all persisted correctly",
+        "layer": "api"
+      }
+    ]
+  },
+  "risks_and_mitigations": [
+    {
+      "risk": "Database connection failures in different environments",
+      "mitigation": "Validate connection string during startup and provide clear error messages. Use environment-specific appsettings files.",
+      "layer": "api"
+    },
+    {
+      "risk": "Seed data idempotency issues",
+      "mitigation": "Check if accounts exist before creating seed data. Use account IDs to prevent duplicates.",
+      "layer": "api"
+    },
+    {
+      "risk": "Transaction atomicity for financial operations",
+      "mitigation": "Wrap repository operations in Entity Framework Core transactions to ensure all-or-nothing semantics",
+      "layer": "database"
+    },
+    {
+      "risk": "Concurrent access and race conditions",
+      "mitigation": "Ensure Entity Framework Core handles concurrent access with proper transaction isolation levels",
+      "layer": "database"
+    },
+    {
+      "risk": "Schema mismatch between code and database",
+      "mitigation": "Use Entity Framework Core migrations to automatically create schema from entity mappings. Validate schema matches design.",
+      "layer": "database"
+    },
+    {
+      "risk": "Performance degradation with SQL queries",
+      "mitigation": "Create appropriate indexes per schema design. Use LINQ query optimization and profiling.",
+      "layer": "database"
+    },
+    {
+      "risk": "Breaking changes to API contracts",
+      "mitigation": "Maintain existing ITransactionRepository and IAccountRepository interfaces. Test API responses match expected schema.",
+      "layer": "api"
+    }
+  ]
+}

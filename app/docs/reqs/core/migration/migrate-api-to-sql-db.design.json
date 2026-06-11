@@ -1,0 +1,563 @@
+{
+  "story_path": "app/docs/reqs/core/migration/migrate-api-to-sql-db.analysis.json",
+  "repo_state_before_design": "app/docs/reqs/core/migration/current-reality.audit.json",
+  "workflow_sequence": [
+    {
+      "step": 1,
+      "description": "Application startup: Program.cs reads connection string from appsettings.json",
+      "layers_involved": ["Backend"],
+      "handshake_points": [
+        {
+          "from_layer": "Configuration",
+          "to_layer": "Backend",
+          "contract_used": "ConnectionStringConfiguration",
+          "data_shape": {
+            "connectionString": "string (Server=...;Database=...;User Id=...;Password=...;)"
+          }
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "description": "Backend registers ApplicationDbContext with Entity Framework Core using SQL Server provider",
+      "layers_involved": ["Backend", "DataLayer"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "DataLayer",
+          "contract_used": "DbContextRegistration",
+          "data_shape": {
+            "dbContextOptions": "DbContextOptions<ApplicationDbContext>",
+            "connectionString": "string"
+          }
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "description": "Backend registers SQL-backed repositories (SqlTransactionRepository, SqlAccountRepository) in dependency injection",
+      "layers_involved": ["Backend"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "Backend",
+          "contract_used": "RepositoryRegistration",
+          "data_shape": {
+            "ITransactionRepository": "SqlTransactionRepository",
+            "IAccountRepository": "SqlAccountRepository"
+          }
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "description": "Application startup: Seed data initialization creates test accounts in SQL database",
+      "layers_involved": ["Backend", "DataLayer"],
+      "handshake_points": [
+        {
+          "from_layer": "Backend",
+          "to_layer": "DataLayer",
+          "contract_used": "SeedDataOperation",
+          "data_shape": {
+            "accounts": [
+              {
+                "id": "uuid",
+                "accountName": "string",
+                "createdAt": "datetime",
+                "updatedAt": "datetime"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "description": "API request arrives: Controller calls service layer to validate and process transaction",
+      "layers_involved": ["Backend"],
+      "handshake_points": [
+        {
+          "from_layer": "Controller",
+          "to_layer": "Service",
+          "contract_used": "TransactionCreationRequest",
+          "data_shape": {
+            "sourceAccountId": "string",
+            "targetAccountId": "string",
+            "amount": "decimal",
+            "transactionDate": "date"
+          }
+        }
+      ]
+    },
+    {
+      "step": 6,
+      "description": "Service validates transaction rules and calls SQL repository to persist transaction",
+      "layers_involved": ["Backend", "DataLayer"],
+      "handshake_points": [
+        {
+          "from_layer": "Service",
+          "to_layer": "Repository",
+          "contract_used": "TransactionPersistence",
+          "data_shape": {
+            "transaction": {
+              "id": "uuid",
+              "sourceAccountId": "uuid",
+              "targetAccountId": "uuid",
+              "amount": "decimal",
+              "transactionDate": "date",
+              "createdAt": "datetime"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "step": 7,
+      "description": "SQL repository executes INSERT via Entity Framework Core and returns persisted transaction",
+      "layers_involved": ["DataLayer"],
+      "handshake_points": [
+        {
+          "from_layer": "Repository",
+          "to_layer": "Database",
+          "contract_used": "DatabaseInsert",
+          "data_shape": {
+            "table": "Transactions",
+            "columns": ["transaction_id", "source_account_id", "target_account_id", "amount", "transaction_date", "created_at"]
+          }
+        }
+      ]
+    },
+    {
+      "step": 8,
+      "description": "API response returns transaction to client with HTTP 201 Created",
+      "layers_involved": ["Backend"],
+      "handshake_points": [
+        {
+          "from_layer": "Controller",
+          "to_layer": "Client",
+          "contract_used": "TransactionCreationResponse",
+          "data_shape": {
+            "id": "string",
+            "sourceAccountId": "string",
+            "targetAccountId": "string",
+            "amount": "decimal",
+            "transactionDate": "string (ISO 8601)",
+            "createdAt": "string (ISO 8601)"
+          }
+        }
+      ]
+    }
+  ],
+  "instrumentation_events": [
+    {
+      "event_name": "DatabaseConnectionAttempt",
+      "description": "Logged when application attempts to connect to SQL database during startup",
+      "layers_involved": ["Backend", "DataLayer"],
+      "data_points": [
+        {
+          "point": "connectionString_masked",
+          "description": "Connection string with password masked for security"
+        },
+        {
+          "point": "timestamp",
+          "description": "When connection attempt occurred"
+        },
+        {
+          "point": "success",
+          "description": "Whether connection succeeded or failed"
+        }
+      ]
+    },
+    {
+      "event_name": "SeedDataInitialization",
+      "description": "Logged when seed data is being created in SQL database",
+      "layers_involved": ["Backend", "DataLayer"],
+      "data_points": [
+        {
+          "point": "accountsCreated",
+          "description": "Number of accounts created"
+        },
+        {
+          "point": "timestamp",
+          "description": "When seed data initialization occurred"
+        },
+        {
+          "point": "duration_ms",
+          "description": "Time taken to seed data"
+        }
+      ]
+    },
+    {
+      "event_name": "TransactionPersisted",
+      "description": "Logged when a transaction is successfully persisted to SQL database",
+      "layers_involved": ["Backend", "DataLayer"],
+      "data_points": [
+        {
+          "point": "transactionId",
+          "description": "UUID of persisted transaction"
+        },
+        {
+          "point": "sourceAccountId",
+          "description": "Source account UUID"
+        },
+        {
+          "point": "targetAccountId",
+          "description": "Target account UUID"
+        },
+        {
+          "point": "amount",
+          "description": "Transaction amount"
+        },
+        {
+          "point": "duration_ms",
+          "description": "Time taken to persist transaction"
+        }
+      ]
+    },
+    {
+      "event_name": "DatabaseError",
+      "description": "Logged when database operation fails",
+      "layers_involved": ["Backend", "DataLayer"],
+      "data_points": [
+        {
+          "point": "errorType",
+          "description": "Type of database error (connection, constraint, timeout, etc.)"
+        },
+        {
+          "point": "operation",
+          "description": "What operation failed (INSERT, SELECT, etc.)"
+        },
+        {
+          "point": "errorMessage",
+          "description": "Error message from database"
+        },
+        {
+          "point": "timestamp",
+          "description": "When error occurred"
+        }
+      ]
+    }
+  ],
+  "layer_responsibilities": [
+    {
+      "layer": "Backend (Program.cs, Controllers, Services)",
+      "new_responsibilities": [
+        {
+          "responsibility": "Read connection string from appsettings.json and validate it exists",
+          "intent": "Configuration is available at startup; backend must ensure database connectivity before accepting requests"
+        },
+        {
+          "responsibility": "Register ApplicationDbContext with Entity Framework Core using SQL Server provider",
+          "intent": "Backend owns dependency injection and service registration; DbContext must be configured before repositories are instantiated"
+        },
+        {
+          "responsibility": "Register SQL-backed repositories instead of in-memory repositories",
+          "intent": "Backend controls which repository implementation is used; this is a dependency injection concern"
+        },
+        {
+          "responsibility": "Initialize seed data using SQL repositories on startup",
+          "intent": "Backend owns application initialization logic; seed data must be created in SQL database, not in-memory"
+        },
+        {
+          "responsibility": "Handle database connection failures gracefully with meaningful error messages",
+          "intent": "Backend is the defensible zone for error handling; users should receive clear feedback about database issues"
+        }
+      ]
+    },
+    {
+      "layer": "DataLayer (ApplicationDbContext, SQL Repositories)",
+      "new_responsibilities": [
+        {
+          "responsibility": "Define DbSet<Account> and DbSet<Transaction> in ApplicationDbContext",
+          "intent": "Entity Framework Core requires DbSet properties to map domain models to database tables"
+        },
+        {
+          "responsibility": "Configure entity mappings in OnModelCreating using Fluent API",
+          "intent": "Database schema design (column names, types, constraints) must be defined in code to match app/src/db/schema.sql"
+        },
+        {
+          "responsibility": "Implement SqlTransactionRepository with LINQ queries against DbContext",
+          "intent": "Repository is the data access layer; it must translate ITransactionRepository interface calls to Entity Framework Core queries"
+        },
+        {
+          "responsibility": "Implement SqlAccountRepository with LINQ queries and balance calculation",
+          "intent": "Repository must implement IAccountRepository interface; balance calculation queries transactions from SQL database"
+        },
+        {
+          "responsibility": "Ensure transaction atomicity for financial operations",
+          "intent": "Database layer must guarantee data integrity; financial transactions must be all-or-nothing"
+        }
+      ]
+    },
+    {
+      "layer": "Configuration (appsettings.json, appsettings.Development.json)",
+      "new_responsibilities": [
+        {
+          "responsibility": "Provide environment-specific connection strings",
+          "intent": "Configuration layer manages environment differences; different databases for dev/test/prod"
+        }
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "contract_type": "DataModel",
+      "name": "ApplicationDbContext",
+      "description": "Entity Framework Core DbContext with mappings for Account and Transaction entities",
+      "changes": {
+        "added": [
+          {
+            "property": "DbSet<Account>",
+            "type": "DbSet<Account>",
+            "description": "Represents the Accounts table in SQL database"
+          },
+          {
+            "property": "DbSet<Transaction>",
+            "type": "DbSet<Transaction>",
+            "description": "Represents the Transactions table in SQL database"
+          },
+          {
+            "method": "OnModelCreating",
+            "description": "Fluent API configuration for entity mappings, constraints, and indexes"
+          }
+        ],
+        "modified": [],
+        "removed": []
+      }
+    },
+    {
+      "contract_type": "DataModel",
+      "name": "Account Entity Mapping",
+      "description": "Entity Framework Core mapping for Account domain model to Accounts table",
+      "changes": {
+        "added": [
+          {
+            "mapping": "Id -> account_id (UUID PK)",
+            "description": "Primary key mapping"
+          },
+          {
+            "mapping": "AccountName -> account_name (VARCHAR 255)",
+            "description": "Account name mapping"
+          },
+          {
+            "mapping": "CreatedAt -> created_at (TIMESTAMP)",
+            "description": "Creation timestamp mapping"
+          },
+          {
+            "mapping": "UpdatedAt -> updated_at (TIMESTAMP)",
+            "description": "Update timestamp mapping"
+          }
+        ],
+        "modified": [],
+        "removed": []
+      }
+    },
+    {
+      "contract_type": "DataModel",
+      "name": "Transaction Entity Mapping",
+      "description": "Entity Framework Core mapping for Transaction domain model to Transactions table",
+      "changes": {
+        "added": [
+          {
+            "mapping": "Id -> transaction_id (UUID PK)",
+            "description": "Primary key mapping"
+          },
+          {
+            "mapping": "SourceAccountId -> source_account_id (UUID FK)",
+            "description": "Source account foreign key mapping"
+          },
+          {
+            "mapping": "TargetAccountId -> target_account_id (UUID FK)",
+            "description": "Target account foreign key mapping"
+          },
+          {
+            "mapping": "Amount -> amount (DECIMAL 19,2)",
+            "description": "Transaction amount mapping with check constraint > 0"
+          },
+          {
+            "mapping": "TransactionDate -> transaction_date (DATE)",
+            "description": "Transaction date mapping"
+          },
+          {
+            "mapping": "CreatedAt -> created_at (TIMESTAMP)",
+            "description": "Creation timestamp mapping"
+          }
+        ],
+        "modified": [],
+        "removed": []
+      }
+    },
+    {
+      "contract_type": "APIContract",
+      "name": "ITransactionRepository",
+      "description": "Repository interface for transaction data access - no changes to interface, only implementation",
+      "changes": {
+        "added": [],
+        "modified": [
+          {
+            "method": "GetByAccountIdAsync(string accountId)",
+            "description": "Now queries SQL database via Entity Framework Core instead of in-memory list"
+          },
+          {
+            "method": "GetAllAsync()",
+            "description": "Now queries SQL database via Entity Framework Core instead of in-memory list"
+          },
+          {
+            "method": "CreateAsync(Transaction transaction)",
+            "description": "Now persists to SQL database via Entity Framework Core instead of in-memory list"
+          }
+        ],
+        "removed": []
+      }
+    },
+    {
+      "contract_type": "APIContract",
+      "name": "IAccountRepository",
+      "description": "Repository interface for account data access - no changes to interface, only implementation",
+      "changes": {
+        "added": [],
+        "modified": [
+          {
+            "method": "GetByIdAsync(string accountId)",
+            "description": "Now queries SQL database via Entity Framework Core instead of in-memory list"
+          },
+          {
+            "method": "GetAllAsync()",
+            "description": "Now queries SQL database via Entity Framework Core instead of in-memory list"
+          },
+          {
+            "method": "GetBalanceAsync(string accountId)",
+            "description": "Now calculates balance from SQL database transactions instead of in-memory list"
+          }
+        ],
+        "removed": []
+      }
+    },
+    {
+      "contract_type": "InteractionPattern",
+      "name": "RepositoryDependencyInjection",
+      "description": "How repositories are registered and injected into services",
+      "changes": {
+        "added": [
+          {
+            "registration": "builder.Services.AddScoped<ITransactionRepository, SqlTransactionRepository>()",
+            "description": "Register SQL transaction repository"
+          },
+          {
+            "registration": "builder.Services.AddScoped<IAccountRepository, SqlAccountRepository>()",
+            "description": "Register SQL account repository"
+          }
+        ],
+        "modified": [
+          {
+            "registration": "Previous: InMemoryTransactionRepository and InMemoryAccountRepository",
+            "description": "Replace in-memory implementations with SQL implementations"
+          }
+        ],
+        "removed": []
+      }
+    }
+  ],
+  "architectural_decisions": [
+    {
+      "decision": "Use Entity Framework Core with SQL Server provider for SQL database access",
+      "justification": "Entity Framework Core is already referenced in the project and provides LINQ-based data access that maintains the repository pattern. SQL Server is configured in appsettings.json.",
+      "basis": "Existing project setup and appsettings.json configuration",
+      "impact": "Requires Entity Framework Core NuGet package and SQL Server provider; all data access goes through DbContext",
+      "answers_open_question": "What is the target SQL database platform?"
+    },
+    {
+      "decision": "Implement SQL repositories (SqlTransactionRepository, SqlAccountRepository) that implement existing interfaces",
+      "justification": "Maintains the repository pattern and interface contracts; allows controllers and services to remain unchanged. This is a drop-in replacement for in-memory repositories.",
+      "basis": "Existing repository interface pattern in codebase",
+      "impact": "New repository implementations required; no changes to controllers, services, or API contracts",
+      "answers_open_question": "Should existing API endpoints continue to work with SQL-backed repositories?"
+    },
+    {
+      "decision": "Configure ApplicationDbContext with Fluent API mappings in OnModelCreating",
+      "justification": "Fluent API provides explicit control over entity mappings, constraints, and indexes. This ensures the C# domain models map correctly to the SQL schema defined in app/src/db/schema.sql.",
+      "basis": "Entity Framework Core best practice; matches existing ApplicationDbContext structure",
+      "impact": "ApplicationDbContext must be updated with DbSet properties and OnModelCreating configuration",
+      "answers_open_question": "What is the complete database schema design for Account and Transaction entities?"
+    },
+    {
+      "decision": "Use automatic database migrations via Entity Framework Core on application startup",
+      "justification": "Simplifies deployment and ensures schema is always in sync with code. EF Core can generate migrations from entity mappings.",
+      "basis": "Common pattern in .NET applications; reduces manual deployment steps",
+      "impact": "Requires EF Core migration infrastructure; database must be accessible at startup",
+      "answers_open_question": "Should database migrations be automated or manual?"
+    },
+    {
+      "decision": "Update seed data initialization to use SQL repositories instead of in-memory",
+      "justification": "Seed data must be persisted to SQL database for consistency. Current Program.cs logic can be adapted to use SQL repositories.",
+      "basis": "Requirement from story analysis; ensures test data is available after application restart",
+      "impact": "Program.cs startup logic must be updated; seed data initialization must check for existing data to avoid duplicates",
+      "answers_open_question": "Should existing in-memory seed data be migrated to SQL database?"
+    },
+    {
+      "decision": "Maintain connection string in appsettings.json with environment-specific overrides",
+      "justification": "Configuration-driven connection strings allow different databases per environment (dev/test/prod). appsettings.Development.json can override for local development.",
+      "basis": "Existing appsettings.json structure; .NET configuration best practice",
+      "impact": "Connection string must be valid and database must be accessible; application startup fails if connection fails",
+      "answers_open_question": "What is the target SQL database platform?"
+    },
+    {
+      "decision": "Add error handling for database connection failures in Program.cs",
+      "justification": "Provides meaningful error messages when database is unavailable. Prevents cryptic Entity Framework Core exceptions from reaching users.",
+      "basis": "Story analysis requirement for error handling",
+      "impact": "Application startup may fail with clear error message if database is unavailable",
+      "answers_open_question": "Error handling for database connection failures"
+    },
+    {
+      "decision": "Resolve database platform mismatch: Use SQL Server (not PostgreSQL) for .NET API",
+      "justification": "appsettings.json specifies SQL Server connection string. The PostgreSQL schema in app/src/db is for reference/testing only. SQL Server schema will be created via Entity Framework Core migrations.",
+      "basis": "Explicit Architectural Change from Story - appsettings.json is the source of truth for production database",
+      "impact": "Entity Framework Core mappings must target SQL Server syntax; UUID types become UNIQUEIDENTIFIER in SQL Server",
+      "answers_open_question": "What is the target SQL database platform?"
+    }
+  ],
+  "questions_addressed": [
+    {
+      "question": "What is the target SQL database platform?",
+      "answer": "SQL Server (as specified in appsettings.json connection string)",
+      "justification": "The connection string in appsettings.json uses SQL Server syntax (Server=localhost;Database=...;User Id=sa;...). The PostgreSQL schema in app/src/db is for reference/testing only.",
+      "basis": "appsettings.json configuration file"
+    },
+    {
+      "question": "Should existing in-memory seed data be migrated to SQL database?",
+      "answer": "Yes, seed data should be created in SQL database on startup",
+      "justification": "Ensures test accounts are available after application restart. Current Program.cs logic will be adapted to use SQL repositories.",
+      "basis": "Story analysis requirement: 'Seed data is properly initialized in SQL database'"
+    },
+    {
+      "question": "Should database migrations be automated or manual?",
+      "answer": "Automated migrations via Entity Framework Core on application startup",
+      "justification": "Simplifies deployment and ensures schema is always in sync with code. EF Core can generate migrations from entity mappings.",
+      "basis": "Common pattern in .NET applications for development/testing"
+    },
+    {
+      "question": "What is the complete database schema design for Account and Transaction entities?",
+      "answer": "Account: Id (UUID PK), AccountName (VARCHAR 255), CreatedAt (TIMESTAMP), UpdatedAt (TIMESTAMP). Transaction: Id (UUID PK), SourceAccountId (UUID FK), TargetAccountId (UUID FK), Amount (DECIMAL 19,2), TransactionDate (DATE), CreatedAt (TIMESTAMP)",
+      "justification": "Domain models in ITransactionRepository.cs and IAccountRepository.cs match the schema design in app/src/db/schema.sql",
+      "basis": "Existing domain models and database schema design"
+    },
+    {
+      "question": "Are there any performance or scalability requirements?",
+      "answer": "Standard performance for development/testing application; indexes will be created per app/src/db/schema.sql design",
+      "justification": "Story analysis indicates standard performance requirements. Database indexes are already designed in schema.sql.",
+      "basis": "Story analysis complexity assessment"
+    },
+    {
+      "question": "How should the repository pattern be maintained during migration?",
+      "answer": "Implement SQL repositories that implement existing ITransactionRepository and IAccountRepository interfaces",
+      "justification": "Drop-in replacement approach maintains existing contracts; controllers and services require no changes",
+      "basis": "Existing repository pattern in codebase"
+    },
+    {
+      "question": "How should seed data idempotency be handled?",
+      "answer": "Check if accounts exist before creating seed data; use account IDs to prevent duplicates on restart",
+      "justification": "Prevents duplicate accounts on application restart. Current Program.cs logic can be adapted to check for existing data.",
+      "basis": "Story analysis edge case: 'Seed data already exists in database on application restart'"
+    }
+  ]
+}

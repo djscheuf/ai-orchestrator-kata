@@ -1,0 +1,92 @@
+{
+  "source_story": "app/docs/reqs/core/migration/migrate-api-to-sql-db.analysis.json",
+  "overall_design": "app/docs/reqs/core/migration/migrate-api-to-sql-db.design.json",
+  "story": {
+    "as_a": "Backend Developer",
+    "i_want": "Update the current API implementation to utilize a real SQL database connection with connection string managed by configuration",
+    "so_that": "The application can persist data reliably across application restarts and support production-grade data storage instead of in-memory repositories"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "SQL repositories implement the same interfaces as in-memory repositories",
+      "gherkin": "Given the API is configured with a SQL database connection, When a transaction is created, Then it is persisted to the SQL database",
+      "status": "pending"
+    },
+    {
+      "criterion": "Database context is properly registered in dependency injection",
+      "gherkin": "Given the application is configured with DbContext, When repositories are instantiated, Then they receive a valid ApplicationDbContext instance",
+      "status": "pending"
+    },
+    {
+      "criterion": "Existing API endpoints continue to work with SQL-backed repositories",
+      "gherkin": "Given the API endpoints are unchanged, When requests are made to transaction and account endpoints, Then they retrieve/persist data from/to SQL database",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Database connection fails at startup",
+      "gherkin": "Given the database is unavailable, When the application starts, Then it fails with a meaningful error message",
+      "status": "pending"
+    },
+    {
+      "criterion": "Seed data already exists in database on application restart",
+      "gherkin": "Given seed data exists in the database, When the application restarts, Then no duplicate accounts are created",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [
+    "app/docs/reqs/core/migration/streams/01-foundations.stream.json"
+  ],
+  "steps": [
+    {
+      "description": "Implement SqlTransactionRepository class implementing ITransactionRepository with GetByAccountIdAsync, GetAllAsync, and CreateAsync methods using Entity Framework Core LINQ queries",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Implement SqlAccountRepository class implementing IAccountRepository with GetByIdAsync, GetAllAsync, and GetBalanceAsync methods",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Implement SqlTransactionRepository class implementing ITransactionRepository with GetByAccountIdAsync, GetAllAsync, and CreateAsync methods using Entity Framework Core LINQ queries"]
+    },
+    {
+      "description": "Register ApplicationDbContext with Entity Framework Core using SQL Server provider in Program.cs",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Register SqlTransactionRepository and SqlAccountRepository in dependency injection, replacing in-memory implementations",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Register ApplicationDbContext with Entity Framework Core using SQL Server provider in Program.cs", "Implement SqlTransactionRepository class implementing ITransactionRepository with GetByAccountIdAsync, GetAllAsync, and CreateAsync methods using Entity Framework Core LINQ queries", "Implement SqlAccountRepository class implementing IAccountRepository with GetByIdAsync, GetAllAsync, and GetBalanceAsync methods"]
+    },
+    {
+      "description": "Update seed data initialization in Program.cs to use SQL repositories with idempotency checks",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Register SqlTransactionRepository and SqlAccountRepository in dependency injection, replacing in-memory implementations"]
+    },
+    {
+      "description": "Add error handling for database connection failures during application startup",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": ["Register ApplicationDbContext with Entity Framework Core using SQL Server provider in Program.cs"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/reqs/core/migration/migrate-api-to-sql-db.design.json",
+      "app/docs/ARCHITECTURE_BACKEND.md"
+    ],
+    "code": [
+      "app/src/api/Program.cs",
+      "app/src/api/Repositories/ITransactionRepository.cs",
+      "app/src/api/Repositories/IAccountRepository.cs",
+      "app/src/api/Models/Account.cs",
+      "app/src/api/Models/Transaction.cs"
+    ]
+  }
+}

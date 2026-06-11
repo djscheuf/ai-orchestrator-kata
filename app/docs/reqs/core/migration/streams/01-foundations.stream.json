@@ -1,0 +1,65 @@
+{
+  "source_story": "app/docs/reqs/core/migration/migrate-api-to-sql-db.analysis.json",
+  "overall_design": "app/docs/reqs/core/migration/migrate-api-to-sql-db.design.json",
+  "story": {
+    "as_a": "Backend Developer",
+    "i_want": "Update the current API implementation to utilize a real SQL database connection with connection string managed by configuration",
+    "so_that": "The application can persist data reliably across application restarts and support production-grade data storage instead of in-memory repositories"
+  },
+  "related_acceptance_criteria": [
+    {
+      "criterion": "Connection string is read from appsettings.json configuration",
+      "gherkin": "Given appsettings.json contains a valid connection string, When the application starts, Then it connects to the specified SQL database",
+      "status": "pending"
+    },
+    {
+      "criterion": "Account and transaction data models are properly mapped to database entities",
+      "gherkin": "Given the Account and Transaction domain models exist, When data is persisted to SQL, Then the schema correctly represents the domain model",
+      "status": "pending"
+    }
+  ],
+  "related_edge_cases": [
+    {
+      "criterion": "Connection string is missing or invalid",
+      "gherkin": "Given appsettings.json has no connection string, When the application starts, Then it fails with a clear error",
+      "status": "pending"
+    },
+    {
+      "criterion": "Database schema does not exist",
+      "gherkin": "Given the database exists but tables do not, When the application starts, Then migrations create the required schema",
+      "status": "pending"
+    }
+  ],
+  "dependencies": [],
+  "steps": [
+    {
+      "description": "Configure environment-specific connection strings in appsettings.json and appsettings.Development.json",
+      "layer": "api",
+      "status": "pending",
+      "depends_on": []
+    },
+    {
+      "description": "Configure ApplicationDbContext with Entity Framework Core - Define DbSet<Account> and DbSet<Transaction> properties and OnModelCreating mappings",
+      "layer": "database",
+      "status": "pending",
+      "depends_on": ["Configure environment-specific connection strings in appsettings.json and appsettings.Development.json"]
+    },
+    {
+      "description": "Implement database migrations to automatically create Account and Transaction tables with constraints and indexes",
+      "layer": "database",
+      "status": "pending",
+      "depends_on": ["Configure ApplicationDbContext with Entity Framework Core - Define DbSet<Account> and DbSet<Transaction> properties and OnModelCreating mappings"]
+    }
+  ],
+  "relevant_context": {
+    "documentation": [
+      "app/docs/reqs/core/migration/migrate-api-to-sql-db.design.json",
+      "app/docs/reqs/core/migration/current-reality.audit.json"
+    ],
+    "code": [
+      "app/src/api/Program.cs",
+      "app/src/db/schema.sql",
+      "app/src/api/appsettings.json"
+    ]
+  }
+}

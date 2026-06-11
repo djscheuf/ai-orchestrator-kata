@@ -1,0 +1,101 @@
+{
+  "story_format": {
+    "as_a": "Backend Developer",
+    "i_want": "Update the current API implementation to utilize a real SQL database connection with connection string managed by configuration",
+    "so_that": "The application can persist data reliably across application restarts and support production-grade data storage instead of in-memory repositories"
+  },
+  "raw_request": "User request: Update current @[app/src/api] implementation to utilize a real SQL db connection, with connection string managed by config",
+  "target_persona": {
+    "persona_name": "Backend Developer / DevOps Engineer",
+    "role": "Developer maintaining the financial application backend",
+    "technical_level": "Intermediate to Expert",
+    "frequency_of_use": "During development and deployment",
+    "environment": "Development, Staging, Production",
+    "permissions": "Full access to database configuration and API codebase",
+    "context": "Responsible for ensuring data persistence and configuration management across environments"
+  },
+  "capability_breakdown": {
+    "core_action": "Replace in-memory repositories with SQL database-backed repositories",
+    "inputs_required": [
+      "SQL database connection string",
+      "Database configuration from appsettings.json",
+      "Entity Framework DbContext configuration"
+    ],
+    "outputs_expected": [
+      "Functional SQL repositories implementing ITransactionRepository and IAccountRepository",
+      "Proper database schema and migrations",
+      "Configuration-driven connection string management"
+    ],
+    "state_changes": [
+      "Data persisted to SQL database instead of in-memory",
+      "Account and transaction data survives application restarts",
+      "Connection string configurable per environment"
+    ],
+    "side_effects": [
+      "Database schema must be created/migrated",
+      "Seed data may need to be loaded into SQL database",
+      "Application startup may require database availability"
+    ],
+    "affected_components": [
+      "Repositories (ITransactionRepository, IAccountRepository)",
+      "ApplicationDbContext",
+      "Program.cs dependency injection",
+      "appsettings.json configuration"
+    ]
+  },
+  "acceptance_criteria": [
+    {
+      "criterion": "SQL repositories implement the same interfaces as in-memory repositories",
+      "gherkin": "Given the API is configured with a SQL database connection, When a transaction is created, Then it is persisted to the SQL database",
+      "type": "functional",
+      "jtbd": "persist-transaction-to-sql-database",
+      "persona_served": "Backend Developer"
+    },
+    {
+      "criterion": "Connection string is read from appsettings.json configuration",
+      "gherkin": "Given appsettings.json contains a valid connection string, When the application starts, Then it connects to the specified SQL database",
+      "type": "non-functional",
+      "jtbd": "configure-database-connection-from-config",
+      "persona_served": "DevOps Engineer"
+    },
+    {
+      "criterion": "Database context is properly registered in dependency injection",
+      "gherkin": "Given the application is configured with DbContext, When repositories are instantiated, Then they receive a valid ApplicationDbContext instance",
+      "type": "functional",
+      "jtbd": "inject-database-context-into-repositories",
+      "persona_served": "Backend Developer"
+    },
+    {
+      "criterion": "Existing API endpoints continue to work with SQL-backed repositories",
+      "gherkin": "Given the API endpoints are unchanged, When requests are made to transaction and account endpoints, Then they retrieve/persist data from/to SQL database",
+      "type": "functional",
+      "jtbd": "maintain-api-compatibility-with-sql-backend",
+      "persona_served": "Backend Developer"
+    },
+    {
+      "criterion": "Account and transaction data models are properly mapped to database entities",
+      "gherkin": "Given the Account and Transaction domain models exist, When data is persisted to SQL, Then the schema correctly represents the domain model",
+      "type": "functional",
+      "jtbd": "map-domain-models-to-database-schema",
+      "persona_served": "Backend Developer"
+    }
+  ],
+  "edge_cases": [
+    "Database connection fails at startup",
+    "Connection string is missing or invalid",
+    "Database schema does not exist",
+    "Concurrent access to database from multiple application instances",
+    "Transaction rollback scenarios"
+  ],
+  "dependencies": [
+    "Entity Framework Core is already referenced in the project",
+    "SQL Server provider for Entity Framework Core",
+    "Database must be accessible at the connection string specified"
+  ],
+  "open_questions": [
+    "Should existing in-memory seed data be migrated to SQL database?",
+    "What is the target SQL database (SQL Server, PostgreSQL, SQLite)?",
+    "Should database migrations be automated or manual?",
+    "What is the database schema design for Account and Transaction entities?"
+  ]
+}

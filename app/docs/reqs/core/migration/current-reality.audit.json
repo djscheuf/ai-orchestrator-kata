@@ -1,0 +1,91 @@
+{
+  "run_date": "20260611T111200Z",
+  "target_story": "app/docs/reqs/core/migration/migrate-api-to-sql-db.analysis.json",
+  "project_structure": {
+    "root": "app/src/api",
+    "description": "ASP.NET Core 6+ financial application API with in-memory repositories that need to be migrated to SQL database",
+    "tech_stack": {
+      "programming_languages": ["C#"],
+      "frameworks": ["ASP.NET Core 6+", "Entity Framework Core"],
+      "libraries": ["JWT Bearer Authentication", "LINQ"],
+      "unit_testing_tools": ["xUnit"]
+    },
+    "subprojects": [
+      {
+        "root": "app/src/db",
+        "description": "Database schema design and tests using PostgreSQL with Python pytest",
+        "tech_stack": {
+          "programming_language": "SQL/Python",
+          "frameworks": ["PostgreSQL"],
+          "libraries": ["psycopg2"],
+          "unit_testing_tools": ["pytest"]
+        }
+      }
+    ]
+  },
+  "vault_audit": {
+    "decisions": [],
+    "persona": [],
+    "target_architecture": []
+  },
+  "code_audit": {
+    "components": [
+      {
+        "path": "app/src/api/Repositories/ITransactionRepository.cs",
+        "why": "Defines the interface that SQL repository must implement for transaction data access"
+      },
+      {
+        "path": "app/src/api/Repositories/IAccountRepository.cs",
+        "why": "Defines the interface that SQL repository must implement for account data access"
+      },
+      {
+        "path": "app/src/api/Repositories/InMemoryTransactionRepository.cs",
+        "why": "Current implementation to be replaced with SQL-backed version"
+      },
+      {
+        "path": "app/src/api/Repositories/InMemoryAccountRepository.cs",
+        "why": "Current implementation to be replaced with SQL-backed version"
+      }
+    ],
+    "services": [
+      {
+        "path": "app/src/api/Services/ITransactionValidationService.cs",
+        "why": "Validates transaction rules before repository operations"
+      },
+      {
+        "path": "app/src/api/Services/IBalanceCalculationService.cs",
+        "why": "Calculates account balances from transactions"
+      }
+    ],
+    "models": [
+      {
+        "path": "app/src/api/Repositories/ITransactionRepository.cs",
+        "why": "Transaction domain model with properties matching database schema"
+      },
+      {
+        "path": "app/src/api/Repositories/IAccountRepository.cs",
+        "why": "Account domain model with properties matching database schema"
+      }
+    ],
+    "apis": [
+      {
+        "path": "app/src/api/Controllers/TransactionsController.cs",
+        "why": "API endpoints that depend on ITransactionRepository"
+      },
+      {
+        "path": "app/src/api/Controllers/AccountsController.cs",
+        "why": "API endpoints that depend on IAccountRepository"
+      }
+    ],
+    "tests": [
+      {
+        "path": "app/src/api/Tests/TransactionEndpointIntegrationTests.cs",
+        "why": "Integration tests that validate repository behavior through API endpoints"
+      },
+      {
+        "path": "app/src/api/Tests/RepositoryInterfaceTests.cs",
+        "why": "Tests for repository interface contracts"
+      }
+    ]
+  }
+}

@@ -1,0 +1,232 @@
+{
+  "story_intent_path": ".windsurf/skills/migrate-api-to-sql-db.intent.json",
+  "raw_request": "User request: Update current @[app/src/api] implementation to utilize a real SQL db connection, with connection string managed by config",
+  "capability_analysis": {
+    "core_action": "Replace in-memory data repositories with SQL database-backed repositories while maintaining API compatibility",
+    "inputs_required": [
+      "SQL database connection string from appsettings.json",
+      "Entity Framework DbContext configuration",
+      "Account and Transaction domain models",
+      "Repository interface contracts (ITransactionRepository, IAccountRepository)"
+    ],
+    "outputs_expected": [
+      "SQL-backed TransactionRepository implementation",
+      "SQL-backed AccountRepository implementation",
+      "Properly configured ApplicationDbContext with DbSets for Account and Transaction",
+      "Dependency injection configuration in Program.cs using SQL repositories",
+      "Database schema supporting Account and Transaction entities"
+    ],
+    "state_changes": [
+      "Data persisted to SQL database instead of in-memory collections",
+      "Account and transaction data survives application restarts",
+      "Connection string configurable per environment via appsettings.json"
+    ],
+    "side_effects": [
+      "Database must be created and accessible",
+      "Seed data initialization may need to be updated to use SQL repositories",
+      "Application startup may fail if database is unavailable"
+    ],
+    "system_components_affected": {
+      "ui_affected": "None - API only, no UI changes",
+      "api_endpoints": "All existing endpoints (GET/POST transactions, GET accounts) continue to work unchanged",
+      "database_changes": [
+        "Create Account table with Id, AccountName, CreatedAt, UpdatedAt columns",
+        "Create Transaction table with Id, SourceAccountId, TargetAccountId, Amount, Date, CreatedAt columns",
+        "Add foreign key relationships between Transaction and Account"
+      ],
+      "external_services": "SQL Server database (or other SQL provider configured)"
+    }
+  },
+  "acceptance_criteria_analysis": [
+    {
+      "criterion": "SQL repositories implement the same interfaces as in-memory repositories",
+      "gherkin": "Given the API is configured with SQL database connection, When a transaction is created via POST /api/transactions, Then it is persisted to the SQL database and retrievable via GET /api/transactions",
+      "type": "functional",
+      "testable": true,
+      "test_approach": "Integration test: Create transaction, verify in database, retrieve via API",
+      "dependencies": ["Database connection configured", "ApplicationDbContext properly set up"]
+    },
+    {
+      "criterion": "Connection string is read from appsettings.json configuration",
+      "gherkin": "Given appsettings.json contains a valid SQL connection string under ConnectionStrings:DefaultConnection, When the application starts, Then it successfully connects to the specified database",
+      "type": "non-functional",
+      "testable": true,
+      "test_approach": "Unit test: Verify Program.cs reads connection string from configuration",
+      "dependencies": ["appsettings.json properly configured"]
+    },
+    {
+      "criterion": "Database context is properly registered in dependency injection",
+      "gherkin": "Given the application is configured with DbContext, When a repository is instantiated, Then it receives a valid ApplicationDbContext instance with database connectivity",
+      "type": "functional",
+      "testable": true,
+      "test_approach": "Integration test: Verify repositories can execute queries against database",
+      "dependencies": ["DbContext registration in Program.cs", "Database available"]
+    },
+    {
+      "criterion": "Existing API endpoints continue to work with SQL-backed repositories",
+      "gherkin": "Given the API endpoints are unchanged, When requests are made to GET /api/transactions and POST /api/transactions, Then they correctly retrieve/persist data from/to SQL database",
+      "type": "functional",
+      "testable": true,
+      "test_approach": "Integration tests for each endpoint with SQL backend",
+      "dependencies": ["SQL repositories implemented", "Database schema created"]
+    },
+    {
+      "criterion": "Account and transaction data models are properly mapped to database entities",
+      "gherkin": "Given the Account and Transaction domain models exist, When data is persisted to SQL, Then the database schema correctly represents all properties and relationships",
+      "type": "functional",
+      "testable": true,
+      "test_approach": "Database schema validation test",
+      "dependencies": ["Entity Framework Core configuration", "Database schema migration"]
+    },
+    {
+      "criterion": "Error handling for database connection failures",
+      "gherkin": "Given the database is unavailable, When the application attempts to access data, Then it returns appropriate HTTP 500 error with meaningful message",
+      "type": "error-handling",
+      "testable": true,
+      "test_approach": "Integration test with database offline",
+      "dependencies": ["Error handling middleware in place"]
+    },
+    {
+      "criterion": "Seed data is properly initialized in SQL database",
+      "gherkin": "Given the application starts with an empty database, When the seed data initialization runs, Then the 5 test accounts are created in the SQL database",
+      "type": "functional",
+      "testable": true,
+      "test_approach": "Integration test: Verify accounts exist after startup",
+      "dependencies": ["Seed data logic updated for SQL repositories"]
+    }
+  ],
+  "edge_cases": [
+    {
+      "category": "Database Connection",
+      "case": "Connection string is missing from appsettings.json",
+      "impact": "Application startup fails or falls back to in-memory",
+      "handling": "Validate connection string exists and is non-empty during startup"
+    },
+    {
+      "category": "Database Connection",
+      "case": "Connection string is invalid or database is unreachable",
+      "impact": "Application cannot start or requests fail",
+      "handling": "Provide clear error message indicating database connectivity issue"
+    },
+    {
+      "category": "Database Schema",
+      "case": "Database exists but tables do not exist",
+      "impact": "Queries fail with table not found errors",
+      "handling": "Implement database migrations or schema initialization on startup"
+    },
+    {
+      "category": "Concurrent Access",
+      "case": "Multiple application instances access the same database",
+      "impact": "Potential race conditions or locking issues",
+      "handling": "Ensure Entity Framework Core handles concurrent access properly with transactions"
+    },
+    {
+      "category": "Data Integrity",
+      "case": "Transaction creation fails midway (e.g., database error after validation)",
+      "impact": "Partial data state or inconsistent balance calculations",
+      "handling": "Wrap repository operations in transactions to ensure atomicity"
+    },
+    {
+      "category": "Seed Data",
+      "case": "Seed data already exists in database on application restart",
+      "impact": "Duplicate accounts created",
+      "handling": "Check if accounts exist before seeding, or use idempotent seed logic"
+    },
+    {
+      "category": "Configuration",
+      "case": "Different connection strings needed for Development vs Production",
+      "impact": "Wrong database accessed in different environments",
+      "handling": "Use environment-specific appsettings files (appsettings.Development.json, appsettings.Production.json)"
+    }
+  ],
+  "dependencies": {
+    "technical_dependencies": {
+      "existing_code": [
+        "ITransactionRepository interface - must be implemented by SQL repository",
+        "IAccountRepository interface - must be implemented by SQL repository",
+        "Account and Transaction domain models",
+        "Program.cs - dependency injection configuration",
+        "appsettings.json - configuration management"
+      ],
+      "new_code": [
+        "SqlTransactionRepository class implementing ITransactionRepository",
+        "SqlAccountRepository class implementing IAccountRepository",
+        "ApplicationDbContext DbSet properties for Account and Transaction",
+        "Entity Framework Core configuration in ApplicationDbContext.OnModelCreating"
+      ],
+      "infrastructure": [
+        "SQL Server database (or configured SQL provider)",
+        "Entity Framework Core NuGet package (likely already present)",
+        "SQL Server provider for Entity Framework Core"
+      ],
+      "external_services": [
+        "SQL Server instance accessible at connection string"
+      ]
+    },
+    "story_dependencies": {
+      "blocked_by": [],
+      "blocks": [
+        "Any feature requiring persistent data storage",
+        "Production deployment of the application"
+      ],
+      "related": [
+        "Database schema design and migrations",
+        "Seed data generation utility"
+      ]
+    },
+    "knowledge_dependencies": {
+      "domain_knowledge": [
+        "Financial application domain (accounts, transactions, balances)",
+        "Business rules for transaction creation and balance constraints"
+      ],
+      "technical_knowledge": [
+        "Entity Framework Core and DbContext",
+        "SQL database design and relationships",
+        ".NET dependency injection patterns",
+        "Configuration management in .NET"
+      ],
+      "stakeholder_questions": [
+        "What is the target SQL database platform (SQL Server, PostgreSQL, SQLite)?",
+        "Should database migrations be automated or manual?",
+        "What is the expected data volume and performance requirements?"
+      ]
+    }
+  },
+  "open_questions": [
+    {
+      "question": "What is the target SQL database platform?",
+      "impact_areas": ["Database provider selection", "Connection string format", "Entity Framework Core configuration"],
+      "current_assumption": "SQL Server (based on appsettings.json connection string format)"
+    },
+    {
+      "question": "Should existing in-memory seed data be migrated to SQL database?",
+      "impact_areas": ["Seed data initialization logic", "Data migration strategy"],
+      "current_assumption": "Yes, seed data should be created in SQL database on startup"
+    },
+    {
+      "question": "Should database migrations be automated or manual?",
+      "impact_areas": ["Deployment process", "Schema management", "Application startup"],
+      "current_assumption": "Automated migrations on application startup for development"
+    },
+    {
+      "question": "What is the complete database schema design for Account and Transaction entities?",
+      "impact_areas": ["Entity Framework Core configuration", "Repository implementation", "Data integrity"],
+      "current_assumption": "Based on domain models: Account (Id, AccountName, CreatedAt, UpdatedAt), Transaction (Id, SourceAccountId, TargetAccountId, Amount, Date, CreatedAt)"
+    },
+    {
+      "question": "Are there any performance or scalability requirements?",
+      "impact_areas": ["Index strategy", "Query optimization", "Connection pooling"],
+      "current_assumption": "Standard performance for development/testing application"
+    }
+  ],
+  "complexity_assessment": {
+    "overall_complexity": "Medium",
+    "reasoning": "Requires understanding of Entity Framework Core, SQL database design, and .NET dependency injection. The actual implementation is straightforward since repository interfaces are already defined and the CQRS pattern is established. Main complexity is in proper database schema design and ensuring data integrity.",
+    "risk_factors": [
+      "Database connectivity issues in different environments",
+      "Seed data idempotency",
+      "Transaction atomicity for financial operations"
+    ],
+    "estimated_effort": "4-6 hours for complete implementation including testing"
+  }
+}
