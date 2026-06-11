@@ -46,7 +46,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // Register application services
-builder.Services.AddScoped<IJwtTokenService>(sp => new JwtTokenService(secretKey));
+builder.Services.AddSingleton<IJwtTokenService>(sp => new JwtTokenService(secretKey));
 builder.Services.AddScoped<IAccountSecurityService, AccountSecurityService>();
 builder.Services.AddScoped<ITransactionValidationService, TransactionValidationService>();
 builder.Services.AddScoped<IBalanceCalculationService, BalanceCalculationService>();
@@ -65,6 +65,50 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Seed in-memory repositories with test data
+using (var scope = app.Services.CreateScope())
+{
+    var accountRepository = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
+    if (accountRepository is InMemoryAccountRepository inMemoryAccountRepo)
+    {
+        inMemoryAccountRepo.AddAccount(new Account 
+        { 
+            Id = "550e8400-e29b-41d4-a716-446655440001", 
+            AccountName = "Alice Account",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        inMemoryAccountRepo.AddAccount(new Account 
+        { 
+            Id = "550e8400-e29b-41d4-a716-446655440002", 
+            AccountName = "Bob Account",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        inMemoryAccountRepo.AddAccount(new Account 
+        { 
+            Id = "550e8400-e29b-41d4-a716-446655440003", 
+            AccountName = "Charlie Account",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        inMemoryAccountRepo.AddAccount(new Account 
+        { 
+            Id = "550e8400-e29b-41d4-a716-446655440004", 
+            AccountName = "Diana Account",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        inMemoryAccountRepo.AddAccount(new Account 
+        { 
+            Id = "550e8400-e29b-41d4-a716-446655440005", 
+            AccountName = "Eve Account",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+    }
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

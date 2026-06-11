@@ -20,11 +20,10 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Expose port
-EXPOSE 80
-EXPOSE 443
+EXPOSE 5000
 
-# Set environment
-ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:80
+# Set default environment (can be overridden at runtime)
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://+:5000
 
 ENTRYPOINT ["dotnet", "FinancialApi.dll"]
